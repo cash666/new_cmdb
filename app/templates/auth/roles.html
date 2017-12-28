@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block header_css %}
+<style>
+    a {
+        cursor:pointer;
+    }
+    ul li {
+        list-style-type:none;
+        text-align:center;
+    }
+</style>
+{% endblock %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <a href="{{url_for('auth.list_user')}}"><i class="fa fa-home"></i> 角色管理</a> > 角色列表
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            角色列表
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-role-modal" data-toggle="modal">增加角色</button>
+                            <div class="modal fade add-role-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">增加角色</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputRoleName" class="col-sm-2 control-label">角色名称</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputRoleName" placeholder="角色名称" v-model="role_name">
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="add_role()">提交</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>编号</th>
+                                            <th>角色</th>
+                                            <th class="dropdown">创建时间 <span class="caret" @click="sort_by_time($event)"></span></th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody v-if="sort.length == 0">
+                                        {% for role in roles %}
+                                            <tr>
+                                                <td>{{role.id}}</td>
+                                                <td><a href="#" @click="get_permissions({{role.id}}),role_id='{{role.id}}'" data-toggle="modal" data-target="#myModal">{{role.name}}</a></td>
+                                                <td>{{role.create_time}}</td>
+                                                <td><span class="label label-danger" @click="delete_role('{{role.id}}')">删除</span></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tbody v-if="sort">
+                                        {% for role in roles | reverse %}
+                                            <tr>
+                                                <td>{{role.id}}</td>
+                                                <td><a href="#" @click="get_permissions({{role.id}}),role_id='{{role.id}}'" data-toggle="modal" data-target="#myModal">{{role.name}}</a></td>
+                                                <td>{{role.create_time}}</td>
+                                                <td><span class="label label-danger" @click="delete_role('{{role.id}}')">删除</span></td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                        <div class="modal-dialog modal-sm">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                                    <h4 class="modal-title" id="myModalLabel">修改权限</h4>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="form-group">
+                                                        <label>已分配权限（点击删除）</label>
+                                                        <select multiple="" class="form-control">
+                                                            <option v-if="owned_permissions_list.length==0">暂时没有权限</option>
+                                                            <option v-for = "(index,line) in owned_permissions_list" @click="remove(index)">${line.permission_name} ${line.permission_alias_name}</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label>未分配权限（点击增加）</label>
+                                                        <select multiple="" class="form-control">
+                                                            <option v-if="unowned_permissions_list.length==0">无权限可分配</option>
+                                                            <option v-for = "(index,line) in unowned_permissions_list" @click="add(index)">${line.permission_name} ${line.permission_alias_name}</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                                    <button type="button" class="btn btn-primary"  @click="modify_permission()">提交</button>
+                                                </div>
+                                            </div><!-- /.modal-content -->
+                                        </div><!-- /.modal -->
+                                    </div>
+                                </table>
+                            </div>
+                            {% if pagination %}
+                                <div class="pagination" style="float:right">
+                                    {{ page.pagination_widget(pagination,".list_role") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block bottom_js %}
+    <script>
+         window.onload = function(){
+            $('#user_manage').collapse('show');
+         };
+        data = {
+            permissions_list:[],
+            role_name:'',
+            errMsg:'',
+            modify_permissions:[],
+            permissions:[],
+            owned_permissions_list:[],
+            unowned_permissions_list:[],
+            grant_permissions_list:'',
+            role_id:'',
+            sort:'',
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                get_permissions: function(role_id){
+                    get_permissions(role_id);
+                },
+                delete_role: function(role_id){
+                    delete_role(role_id);
+                },
+                add_role: function(){
+                    role_name = $.trim(this.role_name);
+                    add_role(role_name);
+                },
+                modify_permission: function(){
+                    role_id = this.role_id;
+                    grant_list = this.grant_permissions_list;
+                    modify_permission(role_id,grant_list);
+                },
+                add: function(index){
+                    this.owned_permissions_list.push(this.unowned_permissions_list[index]);
+                    this.unowned_permissions_list.splice(index,1);
+                },
+                remove: function(index){
+                    this.unowned_permissions_list.push(this.owned_permissions_list[index]);
+                    this.owned_permissions_list.splice(index,1);
+                },
+                sort_by_time: function(e){
+                    tag = e.target;
+                    sort_by_time(tag);
+                }
+            },
+            watch: {
+               owned_permissions_list:{
+                    handler: function(v){
+                       data.grant_permissions_list = [];
+                       $(v).each(function(idx,val){
+                            data.grant_permissions_list.push(val.permission_id);
+                       });
+                    },
+                    deep: true
+               }
+            },
+        })
+        var ret = true;
+        function sort_by_time(tag){
+            var th = $(tag).parent();
+            if(ret){
+                th.attr('class','dropup');
+                ret = false;
+                data.sort = 'desc';
+            } else {
+                th.attr('class','dropdown');
+                ret = true;
+                data.sort = '';
+            }
+        }
+        function modify_permission(role_id,grant_list){;
+            $.ajax({
+                url:"{{url_for('auth.list_role')}}",
+                data:{'role_id':role_id,'grant_list':JSON.stringify(grant_list)},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                         swal({
+                            "title": "修改成功",
+                            "text": "恭喜！",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                         })
+                    } else {
+                        swal("修改失败","很遗憾！","error");
+                    }
+                }
+            })
+        }
+        function add_role(role_name){
+            if(!role_name){
+                data.errMsg = '角色名称不能为空！';
+                return;
+            }
+            $.ajax({
+                url:"{{url_for('auth.list_role')}}",
+                data:{'role_name':role_name},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "添加成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                        })
+                    } else {
+                        swal( "添加失败",'',"error");
+                    }
+                }
+            })
+        }
+        function delete_role(role_id){
+             $.ajax({
+                url:"{{url_for('auth.list_role')}}",
+                data:{'role_id':role_id,'type':'delete'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "删除成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                        })
+                    } else {
+                        swal( "删除失败",'',"error");
+                    }
+                }
+            })
+        }
+        function get_permissions(role_id){
+            console.log(role_id);
+            $.ajax({
+                url:"{{url_for('auth.list_role')}}",
+                data:{'role_id':role_id},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.permissions_list = response;
+                    data.unowned_permissions_list = [];
+                    data.owned_permissions_list = [];
+                    response.forEach(function(v){
+                        if(v.permission_rw == 0){
+                            data.unowned_permissions_list.push({
+                                'permission_id':v.permission_id,
+                                'permission_name':v.permission_name,
+                                'permission_alias_name':v.permission_alias_name,
+                            })
+                        } else {
+                            data.owned_permissions_list.push({
+                                'permission_id':v.permission_id,
+                                'permission_name':v.permission_name,
+                                'permission_alias_name':v.permission_alias_name,
+                            })
+                        }
+                    });
+                }
+            })
+        }
+    </script>
+{% endblock %}

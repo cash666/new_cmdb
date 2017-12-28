@@ -1,0 +1,873 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <i class="fa fa-home"></i> 资产管理 > 资产列表
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            资产列表
+                            <form action="{{url_for('asset.export_asset')}}">
+                                <input type="submit" class="btn btn-info btn-sm" style="float:right;margin-top:-25px;margin-left:5px" value="导出">
+                            </form>
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-25px" data-target=".add-asset-modal" data-toggle="modal">添加资产</button>
+                            <button type="button" class="btn btn-warning btn-sm" style="float:right;margin-top:-25px;margin-right:5px" data-target=".multi-export-asset-modal" data-toggle="modal">批量导入</button>
+                            <div class="modal fade add-asset-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">添加资产</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputHostName" class="col-sm-2 control-label">主机名称</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputHostName" placeholder="主机名称" v-model="new_hostname">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputInnerIP" class="col-sm-2 control-label">内网IP</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputInnerIP" placeholder="内网IP" v-model="new_innerIP">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputOuterIP" class="col-sm-2 control-label">外网IP</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputOuterIP" placeholder="外网IP" v-model="new_outerIP">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputOs" class="col-sm-2 control-label">操作系统</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputOs" placeholder="操作系统" v-model="new_os">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputCPU" class="col-sm-2 control-label">CPU</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputCPU" placeholder="CPU" v-model="new_cpu">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputMemory" class="col-sm-2 control-label">内存</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputMemory" placeholder="内存" v-model="new_memory">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputDisk" class="col-sm-2 control-label">硬盘</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputDisk" placeholder="硬盘" v-model="new_disk">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputSN" class="col-sm-2 control-label">sn</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputSN" placeholder="sn" v-model="new_sn">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">主机类型</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="new_type">
+                                                            <option value="docker虚拟机">docker虚拟机</option>
+                                                            <option value="openstack机器">openstack机器</option>
+                                                            <option value="IDC物理机">IDC物理机</option>
+                                                            <option value="阿里云ECS">阿里云ECS</option>
+                                                            <option value="aws机器">aws机器</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputManufacturer" class="col-sm-2 control-label">厂商</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputManufacturer" placeholder="厂商" v-model="new_manufacturer">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputModel" class="col-sm-2 control-label">主机型号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputModel" placeholder="主机型号" v-model="new_model">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputAssetNumber" class="col-sm-2 control-label">资产编号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputAssetNumber" placeholder="资产编号" v-model="new_asset_number">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputCabinetNumber" class="col-sm-2 control-label">机柜号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputCabinetNumber" placeholder="机柜号" v-model="new_cabinet_number">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputCabinetPosition" class="col-sm-2 control-label">机柜位置</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputCabinetPosition" placeholder="机柜位置" v-model="new_cabinet_position">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">是否激活</label>
+                                                    <div class="col-sm-10">
+                                                        <label class="radio-inline" style="margin-left:10px">
+                                                            <input type="radio" name="is_active" value="1" v-model="new_is_online">是
+                                                        </label>
+                                                        <label class="radio-inline">
+                                                            <input type="radio" name="is_active" value="0" v-model="new_is_online">否
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">主机状态</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="new_status">
+                                                            <option value="线上">线上</option>
+                                                            <option value="空闲">空闲</option>
+                                                            <option value="下架">下架</option>
+                                                            <option value="报废">报废</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputManager" class="col-sm-2 control-label">负责人</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputManager" placeholder="负责人" v-model="new_manager">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputApplications" class="col-sm-2 control-label">应用</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputApplications" placeholder="应用" v-model="new_applications">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">资产组</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="new_group" multiple>
+                                                            <option v-for="line in group_list" value="${line.id}" v-text="line.name"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">所属IDC</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="new_idc">
+                                                            <option v-for="line in idc_list" value="${line.id}" v-text="line.name"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputComment" class="col-sm-2 control-label">备注</label>
+                                                    <div class="col-sm-10">
+                                                        <textarea cols="55" rows="3" v-model="new_comment" id="inputComment" class="form-control"></textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="add_asset()">提交</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal fade multi-export-asset-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel3">批量导入资产</h4>
+                                        </div>
+                                        <form id="upload_form" enctype="multipart/form-data">
+                                            <div class="modal-body">
+                                                <div class="form-group">
+                                                    <div class="col-sm-12">
+                                                        <input type="file" name="upload_file" v-model="upload_file">
+                                                    </div>
+                                                </div>
+                                                <p style="margin-top:20px">请先下载Excel文件, 按照格式填写主机信息, 上传导入. <a href="{{url_for('asset.show_attachment')}}?filename=asset_template.xls">点击下载模板</a></p>
+                                                <div style="color:red;text-align:center" v-if="errMsg2" v-text="errMsg2"></div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                                <button type="button" class="btn btn-primary" onclick="upload_asset_file()">提交</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <form id="asset_form">
+                                <div class="col-sm-2">
+                                    <select class="form-control" onchange="change_asset()" name="idc">
+                                        <option value="">IDC</option>
+                                        <option v-for="line in idc_list" value="${line.name}" v-if="'{{idc}}' == line.name" v-text="line.name" selected></option>
+                                        <option v-for="line in idc_list" value="${line.name}" v-if="'{{idc}}' != line.name" v-text="line.name"></option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <select class="form-control" onchange="change_asset()" name="group">
+                                        <option value="">主机组</option>
+                                        <option v-for="line in group_list" v-if="'{{group}}' == line.name" value="${line.name}" v-text="line.name" selected></option>
+                                        <option v-for="line in group_list" v-if="'{{group}}' != line.name" value="${line.name}" v-text="line.name"></option>
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <select class="form-control" onchange="change_asset()" name="status">
+                                        <option value="">状态</option>
+                                        {% for line in status_list %}
+                                            {% if status == line %}
+                                                <option value="{{line}}" selected>{{line}}</option>
+                                            {% else %}
+                                                <option value="{{line}}">{{line}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-sm-2">
+                                    <select class="form-control" onchange="change_asset()" name="is_online">
+                                        <option value="">运行状态</option>
+                                        {% for line in online_list %}
+                                            {% if line == is_online %}
+                                                <option value="{{line}}" selected>{{line}}</option>
+                                            {% else %}
+                                                <option value="{{line}}">{{line}}</option>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-sm-4" style="margin-right:-15px;margin-bottom:5px">
+                                    <div class="input-group">
+                                        <input type="text" name="keyword" class="form-control" placeholder="搜索" value="{{keyword}}"/>
+                                        <span class="input-group-btn">
+                                            <button type="button" onclick="change_asset()" class="btn btn-info btn-search">搜索</button>
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>编号</th>
+                                            <th>主机名称</th>
+                                            <th>IP地址</th>
+                                            <th>IDC</th>
+                                            <th>所属主机组</th>
+                                            <th>操作系统</th>
+                                            <th>cpu核数</th>
+                                            <th>内存</th>
+                                            <th>硬盘</th>
+                                            <th>状态</th>
+                                            <th>运行状态</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for asset in assets %}
+                                        <tr>
+                                            <td>{{asset.id}}</td>
+                                            <td>{{asset.hostname}}</td>
+                                            <td>{{asset.innerIP}}{% if asset.outerIP %}/{{asset.outerIP}}{% endif %}</td>
+                                            <td>{{asset.idc.name}}</td>
+                                            {% set sep = joiner(",") %}
+                                            <td>{% for group in asset.asset_groups.all() %}{{ sep() }}{{group.name}}{% endfor %}</td>
+                                            <td v-if="'{{asset.os}}'">{{asset.os}}</td>
+                                            <td v-else style="text-align:center">-</td>
+                                            <td>{{asset.cpu}}</td>
+                                            <td>{{asset.memory}}</td>
+                                            <td>{{asset.disk}}</td>
+                                            <td v-if="'{{asset.status}}'=='线上'"><span class="label label-success">{{asset.status}}</span></td>
+                                            <td v-if="'{{asset.status}}'=='空闲'"><span class="label label-warning">{{asset.status}}</span></td>
+                                            <td v-if="'{{asset.status}}'=='下架' || '{{asset.status}}'=='报废'"><span class="label label-danger">{{asset.status}}</span></td>
+                                            <td v-if="'{{asset.is_online}}' == 'True'"><span class="label label-success">运行中</span></td>
+                                            <td v-else><span class="label label-danger">已停止</span></td>
+                                            <td><span class="label label-success" @click="show_modify_asset_modal('{{asset.id}}')">编辑</span><span class="label label-danger" style="margin-left:10px" @click="delete_asset('{{asset.id}}')">删除</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if pagination %}
+                                <div class="pagination" style="float:right">
+                                    {{ page.pagination_widget(pagination,"asset.asset_list") }}
+                                </div>
+                            {% endif %}
+                            <div class="modal fade modify-asset-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel2">修改资产</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputHostName2" class="col-sm-2 control-label">主机名称</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputHostName2" placeholder="主机名称" v-model="hostname">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputInnerIP2" class="col-sm-2 control-label">内网IP</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputInnerIP2" placeholder="内网IP" v-model="innerIP">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputOuterIP2" class="col-sm-2 control-label">外网IP</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputOuterIP2" placeholder="外网IP" v-model="outerIP">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputOs2" class="col-sm-2 control-label">操作系统</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputOs2" placeholder="操作系统" v-model="os">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputCPU2" class="col-sm-2 control-label">CPU</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputCPU2" placeholder="CPU" v-model="cpu">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputMemory2" class="col-sm-2 control-label">内存</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputMemory2" placeholder="内存" v-model="memory">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputDisk2" class="col-sm-2 control-label">硬盘</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputDisk2" placeholder="硬盘" v-model="disk">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputSN2" class="col-sm-2 control-label">sn</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputSN2" placeholder="sn" v-model="sn">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">主机类型</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="type">
+                                                            <option value="docker虚拟机">docker虚拟机</option>
+                                                            <option value="openstack机器">openstack机器</option>
+                                                            <option value="IDC物理机">IDC物理机</option>
+                                                            <option value="阿里云ECS">阿里云ECS</option>
+                                                            <option value="aws机器">aws机器</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputManufacturer2" class="col-sm-2 control-label">厂商</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputManufacturer2" placeholder="厂商" v-model="manufacturer">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputModel2" class="col-sm-2 control-label">主机型号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputModel2" placeholder="主机型号" v-model="model">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputAssetNumber2" class="col-sm-2 control-label">资产编号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputAssetNumber2" placeholder="资产编号" v-model="asset_number">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputCabinetNumber2" class="col-sm-2 control-label">机柜号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputCabinetNumber2" placeholder="机柜号" v-model="cabinet_number">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputCabinetPosition2" class="col-sm-2 control-label">机柜位置</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputCabinetPosition2" placeholder="机柜位置" v-model="cabinet_position">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">是否激活</label>
+                                                    <div class="col-sm-10">
+                                                        <label class="radio-inline" style="margin-left:10px">
+                                                            <input type="radio" name="is_active" value="1" v-model="is_online">是
+                                                        </label>
+                                                        <label class="radio-inline">
+                                                            <input type="radio" name="is_active" value="0" v-model="is_online">否
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">主机状态</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="status">
+                                                            <option value="线上">线上</option>
+                                                            <option value="空闲">空闲</option>
+                                                            <option value="下架">下架</option>
+                                                            <option value="报废">报废</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputManager2" class="col-sm-2 control-label">负责人</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputManager2" placeholder="负责人" v-model="manager">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputApplications2" class="col-sm-2 control-label">应用</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputApplications2" placeholder="应用" v-model="applications">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">资产组</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="group" multiple>
+                                                            <option v-for="line in group_list" v-text="line.name"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-2 control-label">所属IDC</label>
+                                                    <div class="col-sm-10">
+                                                        <select class="form-control" v-model="idc">
+                                                            <option v-for="line in idc_list" value="${line.id}" v-text="line.name"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputComment2" class="col-sm-2 control-label">备注</label>
+                                                    <div class="col-sm-10">
+                                                        <textarea cols="55" rows="3" v-model="comment" id="inputComment2" class="form-control"></textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="modify_asset()">提交</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+    <script src="{{ url_for('static',filename='js/jquery.form.min.js') }}"></script>
+    <script>
+        window.onload = function(){
+            $('#asset_manage').collapse('show');
+            load_idc_list();
+            load_asset_group_list();
+        };
+        data = {
+            idc_list:'',
+            group_list:'',
+            asset_id: '',
+            hostname:'',
+            innerIP:'',
+            outerIP:'',
+            os:'',
+            cpu:'',
+            memory:'',
+            disk:'',
+            sn:'',
+            type:'',
+            manufacturer:'',
+            model:'',
+            asset_number:'',
+            cabinet_number:'',
+            cabinet_position:'',
+            status:'',
+            is_online:'',
+            manager:'',
+            applications:'',
+            comment:'',
+            group:'',
+            idc:'',
+            errMsg:'',
+            old_hostname:'',
+            old_innerIP:'',
+            old_outerIP:'',
+            old_os:'',
+            old_cpu:'',
+            old_memory:'',
+            old_disk:'',
+            old_sn:'',
+            old_type:'',
+            old_manufacturer:'',
+            old_model:'',
+            old_asset_number:'',
+            old_cabinet_number:'',
+            old_cabinet_position:'',
+            old_status:'',
+            old_is_online:'',
+            old_manager:'',
+            old_applications:'',
+            old_comment:'',
+            old_group:'',
+            old_idc:'',
+            upload_file:'',
+            errMsg2:'',
+        }
+        function upload_asset_file(){
+            if($.trim(data.upload_file).length == 0){
+                data.errMsg2 = '请先上传要导入的文件！';
+                return false;
+            }
+            var options = {
+                type:'POST',
+                url:"{{url_for('asset.asset_list')}}",
+                resetForm:true,
+                success: function(response) {
+                    if(response.result == 1){
+                        swal({
+                            "title": "导入成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "导入失败",'',"error");
+                    }
+                }
+            };
+            $('#upload_form').ajaxSubmit(options);
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                add_asset: function(){
+                    hostname = this.new_hostname;
+                    innerIP = this.new_innerIP;
+                    outerIP = this.new_outerIP;
+                    os = this.new_os;
+                    cpu = this.new_cpu;
+                    memory = this.new_memory;
+                    disk = this.new_disk;
+                    sn = this.new_sn;
+                    type = this.new_type;
+                    manufacturer = this.new_manufacturer;
+                    model = this.new_model;
+                    asset_number = this.new_asset_number;
+                    cabinet_number = this.new_cabinet_number;
+                    cabinet_position = this.new_cabinet_position;
+                    status = this.new_status;
+                    is_online = this.new_is_online;
+                    manager = this.new_manager;
+                    applications = this.new_applications;
+                    comment = this.new_comment;
+                    group = this.new_group;
+                    idc = this.new_idc;
+                    add_asset(hostname,innerIP,outerIP,os,cpu,memory,disk,sn,type,manufacturer,model,asset_number,cabinet_number,cabinet_position,status,is_online,manager,applications,comment,group,idc);
+                },
+                show_modify_asset_modal: function(asset_id){
+                    $('.modify-asset-modal').modal('show');
+                    this.asset_id = asset_id;
+                    load_asset_info(asset_id)
+                },
+                modify_asset: function(){
+                    asset_id = this.asset_id;
+                    hostname = this.hostname;
+                    innerIP = this.innerIP;
+                    outerIP = this.outerIP;
+                    os = this.os;
+                    cpu = this.cpu;
+                    memory = this.memory;
+                    disk = this.disk;
+                    sn = this.sn;
+                    type = this.type;
+                    manufacturer = this.manufacturer;
+                    model = this.model;
+                    asset_number = this.asset_number;
+                    cabinet_number = this.cabinet_number;
+                    cabinet_position = this.cabinet_position;
+                    status = this.status;
+                    is_online = this.is_online;
+                    manager = this.manager;
+                    applications = this.applications;
+                    comment = this.comment;
+                    group = this.group;
+                    idc = this.idc;
+                    modify_asset(asset_id,hostname,innerIP,outerIP,os,cpu,memory,disk,sn,type,manufacturer,model,asset_number,cabinet_number,cabinet_position,status,is_online,manager,applications,comment,group,idc);
+                },
+                delete_asset: function(asset_id){
+                    delete_asset(asset_id);
+                },
+            }
+        })
+        function delete_asset(asset_id){
+            $.ajax({
+                url:"{{url_for('asset.asset_list')}}",
+                data:{'asset_id':asset_id,'type':'delete'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        window.location.reload();
+                    } else {
+                        swal( "修改失败",'',"error");
+                    }
+                }
+            })
+        }
+        function modify_asset(asset_id,hostname,innerIP,outerIP,os,cpu,memory,disk,sn,type,manufacturer,model,asset_number,cabinet_number,cabinet_position,status,is_online,manager,applications,comment,group,idc){
+            if($.trim(hostname).length == 0){
+                data.errMsg = '主机名不能为空！';
+                return;
+            }
+            if($.trim(innerIP).length == 0 && $.trim(outerIP).length == 0){
+                data.errMsg = '内网或者外网IP至少有一个不能为空！';
+                return;
+            }
+            if(!type){
+                data.errMsg = '主机类型不能为空！';
+                return;
+            }
+            if(!status){
+                data.errMsg = '主机状态不能为空！';
+                return;
+            }
+            if(!group){
+                data.errMsg = '资产组不能为空！';
+                return;
+            }
+            if(!idc){
+                data.errMsg = '所属IDC不能为空！';
+                return;
+            }
+            if($.trim(hostname) == data.old_hostname && $.trim(innerIP) == data.old_innerIP && $.trim(outerIP) == data.old_outerIP && $.trim(os) == data.old_os && $.trim(cpu) == data.old_cpu && $.trim(memory) == data.old_memory && $.trim(disk) == data.old_disk && $.trim(sn) == data.old_sn && $.trim(type) == data.old_type && $.trim(manufacturer) == data.old_manufacturer && $.trim(model) == data.old_model && $.trim(asset_number) == data.old_asset_number && $.trim(cabinet_number) == data.old_cabinet_number && $.trim(cabinet_position) == data.old_cabinet_position && $.trim(status) == data.old_status && is_online.toString() == data.old_is_online.toString() && $.trim(manager) == data.old_manager && $.trim(applications) == data.old_applications && $.trim(comment) == data.old_comment && $.trim(group) == data.old_group && $.trim(idc) == data.old_idc){
+                return;
+            } else {
+                commit_data = {
+                    "asset_id": asset_id,
+                    "hostname": hostname,
+                    "innerIP": innerIP,
+                    "outerIP": outerIP,
+                    "os": os,
+                    "cpu": cpu,
+                    "memory": memory,
+                    "disk": disk,
+                    "sn": sn,
+                    "type": type,
+                    "manufacturer": manufacturer,
+                    "model": model,
+                    "asset_number": asset_number,
+                    "cabinet_number": cabinet_number,
+                    "cabinet_position": cabinet_position,
+                    "status": status,
+                    "is_online": is_online,
+                    "manager": manager,
+                    "applications": applications,
+                    "comment": comment,
+                    "group": group,
+                    "idc": idc,
+                }
+                $.ajax({
+                    url:"{{url_for('asset.asset_list')}}",
+                    data:{'data':JSON.stringify(commit_data),'type':'modify'},
+                    timeout:10000,
+                    type:'post',
+                    success:function(response){
+                        if(response.result == 1){
+                            swal({
+                                "title": "修改成功",
+                                "text": "",
+                                "type": "success"
+                                }, function () {
+                                    setTimeout(function () {
+                                        window.location.reload();
+                                    }, 50);
+                                }
+                            )
+                        } else {
+                            swal( "修改失败",'',"error");
+                        }
+                    }
+                })
+            }
+        }
+        function add_asset(hostname,innerIP,outerIP,os,cpu,memory,disk,sn,type,manufacturer,model,asset_number,cabinet_number,cabinet_position,status,is_online,manager,applications,comment,group,idc){
+            if($.trim(hostname).length == 0){
+                data.errMsg = '主机名不能为空！';
+                return;
+            }
+            if($.trim(innerIP).length == 0 && $.trim(outerIP).length == 0){
+                data.errMsg = '内网或者外网IP至少有一个不能为空！';
+                return;
+            }
+            if(!type){
+                data.errMsg = '主机类型不能为空！';
+                return;
+            }
+            if(!status){
+                data.errMsg = '主机状态不能为空！';
+                return;
+            }
+            if(!group){
+                data.errMsg = '资产组不能为空！';
+                return;
+            }
+            if(!idc){
+                data.errMsg = '所属IDC不能为空！';
+                return;
+            }
+            commit_data = {
+                "hostname": hostname,
+                "innerIP": innerIP,
+                "outerIP": outerIP,
+                "os": os,
+                "cpu": cpu,
+                "memory": memory,
+                "disk": disk,
+                "sn": sn,
+                "type": type,
+                "manufacturer": manufacturer,
+                "model": model,
+                "asset_number": asset_number,
+                "cabinet_number": cabinet_number,
+                "cabinet_position": cabinet_position,
+                "status": status,
+                "is_online": is_online,
+                "manager": manager,
+                "applications": applications,
+                "comment": comment,
+                "group": group,
+                "idc": idc,
+            }
+            $.ajax({
+                url:"{{url_for('asset.asset_list')}}",
+                data:{'data':JSON.stringify(commit_data)},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "添加成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "添加失败",'',"error");
+                    }
+                }
+            })
+        }
+        function load_idc_list(){
+            $.ajax({
+                url:"{{url_for('asset.idc_list')}}",
+                data:{'type':'load_idc_list'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.idc_list = response;
+                }
+            })
+        }
+        function load_asset_group_list(){
+            $.ajax({
+                url:"{{url_for('asset.asset_group_list')}}",
+                data:{'type':'load_asset_group_list'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.group_list = response;
+                }
+            })
+        }
+        function load_asset_info(asset_id){
+            $.ajax({
+                url:"{{url_for('asset.asset_list')}}",
+                data:{'asset_id':asset_id,'type':'load_asset_info'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.hostname = response.hostname;
+                    data.innerIP = response.innerIP;
+                    data.outerIP = response.outerIP;
+                    data.os = response.os;
+                    data.cpu = response.cpu;
+                    data.memory = response.memory;
+                    data.disk = response.disk;
+                    data.sn = response.sn;
+                    data.type = response.type;
+                    data.manufacturer = response.manufacturer;
+                    data.model = response.model;
+                    data.asset_number = response.asset_number;
+                    data.cabinet_number = response.cabinet_number;
+                    data.cabinet_position = response.cabinet_position;
+                    data.status = response.status;
+                    data.is_online = response.is_online;
+                    data.manager = response.manager;
+                    data.applications = response.applications;
+                    data.comment = response.comment;
+                    data.group = response.group;
+                    data.idc = response.idc;
+                    data.old_hostname = response.hostname;
+                    data.old_innerIP = response.innerIP;
+                    data.old_outerIP = response.outerIP;
+                    data.old_os = response.os;
+                    data.old_cpu = response.cpu;
+                    data.old_memory = response.memory;
+                    data.old_disk = response.disk;
+                    data.old_sn = response.sn;
+                    data.old_type = response.type;
+                    data.old_manufacturer = response.manufacturer;
+                    data.old_model = response.model;
+                    data.old_asset_number = response.asset_number;
+                    data.old_cabinet_number = response.cabinet_number;
+                    data.old_cabinet_position = response.cabinet_position;
+                    data.old_status = response.status;
+                    data.old_is_online = response.is_online;
+                    data.old_manager = response.manager;
+                    data.old_applications = response.applications;
+                    data.old_comment = response.comment;
+                    data.old_group = response.group;
+                    data.old_idc = response.idc;
+                }
+            })
+        }
+        function change_asset(){
+            var args = $('#asset_form').serialize();
+            window.location = "{{url_for('asset.asset_list')}}?" + args;
+        }
+    </script>
+{% endblock %}

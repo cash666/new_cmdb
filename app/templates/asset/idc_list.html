@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <i class="fa fa-home"></i> 资产管理 > 机房列表
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            IDC列表
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-idc-modal" data-toggle="modal">添加IDC</button>
+                            <div class="modal fade add-idc-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">添加IDC</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputIdcName" class="col-sm-2 control-label">IDC名称</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputIdcName" placeholder="IDC名称" v-model="new_name">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputBandWidth" class="col-sm-2 control-label">IDC带宽</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputBandWidth" placeholder="IDC带宽" v-model="new_bandwidth">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputcontacts" class="col-sm-2 control-label">IDC联系人</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputcontacts" placeholder="IDC联系人" v-model="new_contacts">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputPhone" class="col-sm-2 control-label">手机号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputPhone" placeholder="手机号" v-model="new_phone">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputAddress" class="col-sm-2 control-label">机房地址</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputAddress" placeholder="机房地址" v-model="new_address">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputNetwork" class="col-sm-2 control-label">IP地址段</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputNetwork" placeholder="IP地址段" v-model="new_network">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputOperator" class="col-sm-2 control-label">运营商</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputOperator" placeholder="运营商" v-model="new_operator">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputComment" class="col-sm-2 control-label">备注</label>
+                                                    <div class="col-sm-10">
+                                                        <textarea cols="55" rows="3" v-model="new_comment" id="inputComment" class="form-control"></textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="add_idc()">提交</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <form method="post" action="{{url_for('asset.idc_list')}}">
+                                <div class="col-md-4 pull-right" style="margin-right:-15px;margin-bottom:5px">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="搜索" v-model="search"/>
+                                        <span class="input-group-btn">
+                                           <input type="submit" onclick="return check_search()" class="btn btn-info btn-search" value="搜索">
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>编号</th>
+                                            <th>IDC名称</th>
+                                            <th>主机数量</th>
+                                            <th>联系人</th>
+                                            <th>电话</th>
+                                            <th>备注</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for idc in idcs %}
+                                        <tr>
+                                            <td>{{idc.id}}</td>
+                                            <td>{{idc.name}}</td>
+                                            <td>{{idc.count_assets()}}</td>
+                                            <td>{{idc.contacts}}</td>
+                                            <td>{{idc.phone}}</td>
+                                            <td>{{idc.comment}}</td>
+                                            <td><span class="label label-success" @click="show_modify_idc_modal('{{idc.id}}')">修改</span><span class="label label-danger" style="margin-left:10px" @click="delete_idc('{{idc.id}}')">删除</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if pagination %}
+                                <div class="pagination" style="float:right">
+                                    {{ page.pagination_widget(pagination,"asset.idc_list") }}
+                                </div>
+                            {% endif %}
+                            <div class="modal fade modify-idc-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel2" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel2">修改IDC</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputIdcName2" class="col-sm-2 control-label">IDC名称</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputIdcName2" placeholder="IDC名称" v-model="name">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputBandWidth2" class="col-sm-2 control-label">IDC带宽</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputBandWidth2" placeholder="IDC带宽" v-model="bandwidth">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputContacts2" class="col-sm-2 control-label">IDC联系人</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputContacts2" placeholder="IDC联系人" v-model="contacts">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputPhone2" class="col-sm-2 control-label">手机号</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputPhone2" placeholder="手机号" v-model="phone">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputAddress2" class="col-sm-2 control-label">机房地址</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputAddress2" placeholder="机房地址" v-model="address">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputNetwork2" class="col-sm-2 control-label">IP地址段</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputNetwork2" placeholder="IP地址段" v-model="network">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputOperator2" class="col-sm-2 control-label">运营商</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputOperator2" placeholder="运营商" v-model="operator">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputComment2" class="col-sm-2 control-label">备注</label>
+                                                    <div class="col-sm-10">
+                                                        <textarea cols="55" rows="3" v-model="comment" id="inputComment2" class="form-control"></textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="modify_idc()">修改</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+    <script>
+        window.onload = function(){
+            $('#asset_manage').collapse('show');
+        };
+        data = {
+            search:'',
+            idc_id:'',
+            new_name:'',
+            new_bandwidth:'',
+            new_contacts:'',
+            new_phone:'',
+            new_address:'',
+            new_network:'',
+            new_operator:'',
+            new_comment:'',
+            name:'',
+            bandwidth:'',
+            contacts:'',
+            phone:'',
+            address:'',
+            network:'',
+            operator:'',
+            comment:'',
+            errMsg:'',
+            old_name:'',
+            old_bandwidth:'',
+            old_contacts:'',
+            old_phone:'',
+            old_address:'',
+            old_network:'',
+            old_operator:'',
+            old_comment:'',
+        }
+        function check_search(){
+            if($.trim(data.search).length == 0){
+                return false;
+            }
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                add_idc: function(){
+                    name = this.new_name;
+                    bandwidth = this.new_bandwidth;
+                    contacts = this.new_contacts;
+                    phone = this.new_phone;
+                    address = this.new_address;
+                    network = this.new_network;
+                    operator = this.new_operator;
+                    comment = this.new_comment;
+                    add_idc(name,bandwidth,contacts,phone,address,network,operator,comment);
+                },
+                show_modify_idc_modal: function(idc_id){
+                    data.idc_id = idc_id;
+                    $('.modify-idc-modal').modal('show');
+                    load_idc_info(idc_id);
+                },
+                modify_idc: function(){
+                    idc_id = this.idc_id;
+                    name = this.name;
+                    bandwidth = this.bandwidth;
+                    contacts = this.contacts;
+                    phone = this.phone;
+                    address = this.address;
+                    network = this.network;
+                    operator = this.operator;
+                    comment = this.comment;
+                    modify_idc(idc_id,name,bandwidth,contacts,phone,address,network,operator,comment);
+                },
+                delete_idc: function(idc_id){
+                    delete_idc(idc_id);
+                }
+            }
+        })
+        function delete_idc(idc_id){
+            $.ajax({
+                url:"{{url_for('asset.idc_list')}}",
+                data:{'idc_id':idc_id,'type':'delete_idc_info'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        window.location.reload();
+                    } else {
+                        swal( "删除失败",'',"error");
+                    }
+                }
+            })
+        }
+        function modify_idc(idc_id,name,bandwidth,contacts,phone,address,network,operator,comment){
+            if($.trim(name).length == 0){
+                data.errMsg = 'IDC名称不能为空！';
+                return false;
+            }
+            if($.trim(bandwidth).length == 0){
+                data.errMsg = 'IDC带宽不能为空！';
+                return false;
+            }
+            if($.trim(contacts).length == 0){
+                data.errMsg = '联系人不能为空！';
+                return false;
+            }
+            if($.trim(phone).length == 0){
+                data.errMsg = '手机号不能为空！';
+                return false;
+            }
+            if($.trim(name) == data.old_name && $.trim(bandwidth) == data.old_bandwidth && $.trim(contacts) == data.old_contacts && $.trim(phone) == data.old_phone && $.trim(address) == data.old_address && $.trim(network) == data.old_network && $.trim(operator) == data.old_operator && $.trim(comment) == data.old_comment){
+                return;
+            } else {
+                commit_data = {
+                    "idc_id": idc_id,
+                    "name": $.trim(name),
+                    "bandwidth": $.trim(bandwidth),
+                    "contacts": $.trim(contacts),
+                    "phone": $.trim(phone),
+                    "address": $.trim(address),
+                    "network": $.trim(network),
+                    "operator": $.trim(operator),
+                    "comment": $.trim(comment),
+                }
+                $.ajax({
+                    url:"{{url_for('asset.idc_list')}}",
+                    data:{'data':JSON.stringify(commit_data),'type':'modify_idc_info'},
+                    timeout:10000,
+                    type:'post',
+                    success:function(response){
+                        if(response.result == 1){
+                            swal({
+                                "title": "修改成功",
+                                "text": "",
+                                "type": "success"
+                                }, function () {
+                                    setTimeout(function () {
+                                        window.location.reload();
+                                    }, 50);
+                                }
+                            )
+                        } else {
+                            swal( "修改失败",'',"error");
+                        }
+                    }
+                })
+            }
+        }
+        function load_idc_info(idc_id){
+            $.ajax({
+                url:"{{url_for('asset.idc_list')}}",
+                data:{'idc_id':idc_id,'type':'load_idc_info'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.name = response.name;
+                    data.bandwidth = response.bandwidth;
+                    data.contacts = response.contacts;
+                    data.phone = response.phone;
+                    data.address = response.address;
+                    data.network = response.network;
+                    data.operator = response.operator;
+                    data.comment = response.comment;
+                    data.old_name = response.name;
+                    data.old_bandwidth = response.bandwidth;
+                    data.old_contacts = response.contacts;
+                    data.old_phone = response.phone;
+                    data.old_address = response.address;
+                    data.old_network = response.network;
+                    data.old_operator = response.operator;
+                    data.old_comment = response.comment;
+                }
+            })
+        }
+        function add_idc(name,bandwidth,contacts,phone,address,network,operator,comment){
+            if($.trim(name).length == 0){
+                data.errMsg = 'IDC名称不能为空！';
+                return false;
+            }
+            if($.trim(bandwidth).length == 0){
+                data.errMsg = 'IDC带宽不能为空！';
+                return false;
+            }
+            if($.trim(contacts).length == 0){
+                data.errMsg = '联系人不能为空！';
+                return false;
+            }
+            if($.trim(phone).length == 0){
+                data.errMsg = '手机号不能为空！';
+                return false;
+            }
+            commit_data = {
+                "name": $.trim(name),
+                "bandwidth": $.trim(bandwidth),
+                "contacts": $.trim(contacts),
+                "phone": $.trim(phone),
+                "address": $.trim(address),
+                "network": $.trim(network),
+                "operator": $.trim(operator),
+                "comment": $.trim(comment),
+            }
+            $.ajax({
+                url:"{{url_for('asset.idc_list')}}",
+                data:{'data':JSON.stringify(commit_data)},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "添加成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "添加失败",'',"error");
+                    }
+                }
+            })
+        }
+    </script>
+{% endblock %}

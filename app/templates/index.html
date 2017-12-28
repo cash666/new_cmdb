@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+{% block content %}
+    <div id="page-wrapper">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <a><i class="fa fa-home"></i> 首页</a> > 控制台
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="panel panel-primary text-center no-boder bg-color-blue">
+                        <div class="panel-body">
+                            <i class="fa fa-user fa-5x"></i>
+                            <h3><a href="{{url_for('auth.list_user')}}">{{user_count}}</a></h3>
+                        </div>
+                        <div class="panel-footer back-footer-blue">
+                            用户数
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-primary text-center no-boder bg-color-green">
+                        <div class="panel-body">
+                            <i class="fa fa-tasks fa-5x"></i>
+                            <h3><a href="{{url_for('asset.asset_list')}}">{{asset_count}}</a></h3>
+                        </div>
+                        <div class="panel-footer back-footer-green">
+                            主机数
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-primary text-center no-boder bg-color-brown">
+                        <div class="panel-body">
+                            <i class="fa fa-check fa-5x"></i>
+                            <h3><a href="{{url_for('task.task_check')}}">{{uncheck_tasks}}</a></h3>
+                        </div>
+                        <div class="panel-footer back-footer-brown">
+                            待审核数
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="panel panel-primary text-center no-boder bg-color-red">
+                        <div class="panel-body">
+                            <i class="fa fa-edit fa-5x"></i>
+                            <h3><a href="{{url_for('task.task_operator')}}">{{unfinish_tasks}}</a></h3>
+                        </div>
+                        <div class="panel-footer back-footer-red">
+                            待操作数
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <strong>申请任务TOP5用户</strong>
+                    {% for user in apply_task_user_top5 %}
+                        {% if current_user.name == user.applicant %}
+                            <div style="margin-top:30px"><span class="label label-success">{{loop.index}}</span> {{user.applicant}} {{user.count}}次</div>
+                        {% else %}
+                            <div style="margin-top:30px"><span class="label label-primary">{{loop.index}}</span> {{user.applicant}} {{user.count}}次</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <div id="main" style="height:400px;"></div>
+                </div>
+                 <div class="col-md-3">
+                    <strong>操作任务TOP5用户</strong>
+                     {% for user in operate_task_user_top5 %}
+                        {% if current_user.name == user.operator %}
+                            <div style="margin-top:30px"><span class="label label-success">{{loop.index}}</span> {{user.operator}} {{user.count}}次</div>
+                        {% else %}
+                            <div style="margin-top:30px"><span class="label label-primary">{{loop.index}}</span> {{user.operator}} {{user.count}}次</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+<script src="{{ url_for('static',filename='js/echarts.common.min.js') }}"></script>
+<script>
+    function GetDateStr(AddDayCount) {
+        var dd = new Date();
+        dd.setDate(dd.getDate()+AddDayCount);//获取AddDayCount天后的日期
+        var m = dd.getMonth()+1;//获取当前月份的日期
+        var d = dd.getDate();
+        return m+"-"+d;
+   }
+    var myChart = echarts.init(document.getElementById('main'));
+    var apply_task_list = {{ apply_task_list|safe }};
+    var finish_task_list = {{ finish_task_list|safe }};
+    option = {
+        title: {
+            text:'统计图'
+        },
+        tooltip: {
+            trigger: 'axis',
+            axisPointer: {
+                type: 'cross',
+                crossStyle: {
+                    color: '#999'
+                }
+            }
+        },
+        toolbox: {
+            feature: {
+                dataView: {show: true, readOnly: false},
+                magicType: {show: true, type: ['line', 'bar']},
+                restore: {show: true},
+                saveAsImage: {show: true}
+            }
+        },
+        legend: {
+            data:['申请量','发布量']
+        },
+        xAxis: [
+            {
+                type: 'category',
+                data: [GetDateStr(-6),GetDateStr(-5),GetDateStr(-4),GetDateStr(-3),GetDateStr(-2),GetDateStr(-1),GetDateStr(0)],
+                axisPointer: {
+                    type: 'shadow'
+                }
+            }
+        ],
+        yAxis: [
+            {
+                type: 'value',
+                name: '申请量',
+                min: 0,
+                max: 20,
+                interval: 5,
+                axisLabel: {
+                    formatter: '{value} 次'
+                }
+            },
+            {
+                type: 'value',
+                name: '发布量',
+                min: 0,
+                max: 20,
+                interval: 5,
+                axisLabel: {
+                    formatter: '{value} 次'
+                }
+            }
+        ],
+        series: [
+            {
+                name:'申请量',
+                type:'bar',
+                data:apply_task_list
+            },
+            {
+                name:'发布量',
+                type:'bar',
+                data:finish_task_list
+            }
+        ]
+    };
+    myChart.setOption(option);
+</script>
+{% endblock %}

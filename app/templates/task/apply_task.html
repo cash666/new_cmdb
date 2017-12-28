@@ -1,0 +1,709 @@
+{% extends "base.html" %}
+{% block header_css %}
+<style>
+
+</style>
+{% endblock %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <i class="fa fa-home"></i> 项目上线 > 上线申请
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            项目上线申请
+                            <button type="button" class="btn btn-info btn-sm" style="float:right;margin-top:-5px" data-toggle="modal" @click="show_template_modal()">使用模板</button>
+                            <div class="modal fade use-template-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">可以选用的模板</h4>
+                                        </div>
+                                        <div class="modal-body" v-if="template_list.length>0">
+                                            <div class="form-group">
+                                                <select class="form-control" v-model="template_id">
+                                                    <option v-for="line in template_list" value="${line.template_id}" v-text="line.template_name"></option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-body" v-else>
+                                            没有可选用的模板....
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="use_template()">确定</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <form role="form" enctype="multipart/form-data">
+                                        <div class="form-group">
+                                            <label>项目名称</label>
+                                            <input type='text' class="form-control" placeholder="项目名称" v-model.trim="project_name">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>项目域名</label>
+                                            <input type='text' class="form-control" placeholder="项目域名" v-model.trim="project_domain">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>预计上线时间</label>
+                                            <input type="text" class="form-control" onClick="WdatePicker()" readonly v-model.trim="online_time">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否测试</label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_test" value="1" v-model="is_test">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_test" value="0" v-model="is_test">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>紧急程度</label>
+                                            <select class="form-control" v-model="emergent">
+                                                <option value="一般">一般</option>
+                                                <option value="紧急">紧急</option>
+                                                <option value="非常紧急">非常紧急</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>git地址</label>
+                                            <input type='text' class="form-control" placeholder="git地址" v-model.trim="git_url">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>启动命令</label>
+                                            <input type='text' class="form-control" placeholder="启动命令" v-model.trim="start_command">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>程序端口</label>
+                                            <input type='text' class="form-control" placeholder="程序端口" v-model.trim="start_port">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要独立的公网IP</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_public" value="1" v-model="is_public">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_public" value="0" v-model="is_public">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要nginx</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_nginx" value="1" v-model="is_nginx">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_nginx" value="0" v-model="is_nginx">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要跨域</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_crossdomain" value="1" v-model="is_crossdomain">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_crossdomain" value="0" v-model="is_crossdomain">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要mysql</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_mysql" value="1" v-model="is_mysql">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_mysql" value="0" v-model="is_mysql">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要postgresql</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_postgresql" value="1" v-model="is_postgresql">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_postgresql" value="0" v-model="is_postgresql">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要redis</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_redis" value="1" v-model="is_redis">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_redis" value="0" v-model="is_redis">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group" v-if="is_redis==1">
+                                            <label>redis前缀</label>
+                                            <input type='text' class="form-control" placeholder="redis前缀" v-model.trim="redis_prefix">
+                                        </div>
+                                         <div class="form-group">
+                                            <label>是否需要memcache</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_memcache" value="1" v-model="is_memcache">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_memcache" value="0" v-model="is_memcache">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group" v-if="is_memcache==1">
+                                            <label>memcache前缀</label>
+                                            <input type='text' class="form-control" placeholder="memcache前缀" v-model.trim="memcache_prefix">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要ssdb</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_ssdb" value="1" v-model="is_ssdb">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_ssdb" value="0" v-model="is_ssdb">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group" v-if="is_ssdb==1">
+                                            <label>ssdb前缀</label>
+                                            <input type='text' class="form-control" placeholder="ssdb前缀" v-model.trim="ssdb_prefix">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要kafka</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_kafka" value="1" v-model="is_kafka">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_kafka" value="0" v-model="is_kafka">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group" v-if="is_kafka==1">
+                                            <label>kafka前缀</label>
+                                            <input type='text' class="form-control" placeholder="kafka前缀" v-model.trim="kafka_prefix">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要rabbitMQ</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_rabbitMQ" value="1" v-model="is_rabbitMQ">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_rabbitMQ" value="0" v-model="is_rabbitMQ">否
+                                            </label>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要提供守护进程</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_daemon" value="1" v-model="is_daemon">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_daemon" value="0" v-model="is_daemon">否
+                                            </label>
+                                             <div class="form-group" v-if="is_daemon == 1">
+                                                <label>守护进程启动方式</label>
+                                                <input type='text' class="form-control" placeholder="守护进程启动方式" v-model.trim="daemon_mode">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否提供测试url</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_test_url" value="1" v-model="is_test_url">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_test_url" value="0" v-model="is_test_url">否
+                                            </label>
+                                             <div class="form-group" v-if="is_test_url == 1">
+                                                <label>测试url</label>
+                                                <input type='text' class="form-control" placeholder="测试url" v-model.trim="test_url">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否需要slb</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_slb" value="1" v-model="is_slb">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_slb" value="0" v-model="is_slb">否
+                                            </label>
+                                             <div class="form-group" v-if="is_slb == 1">
+                                                <label>Haproxy特殊需求</label>
+                                                <input type='text' class="form-control" placeholder="Haproxy特殊需求" v-model.trim="ha_special">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否提供程序日志</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_log" value="1" v-model="is_log">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_log" value="0" v-model="is_log">否
+                                            </label>
+                                             <div class="form-group" v-if="is_log == 1">
+                                                <label>程序日志位置</label>
+                                                <input type='text' class="form-control" placeholder="程序日志位置" v-model.trim="log_position">
+                                             </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>是否程序自动切割日志</label>
+                                            <label class="radio-inline" style="margin-left:10px">
+                                                <input type="radio" name="is_log_cut" value="1" v-model="is_log_cut">是
+                                            </label>
+                                            <label class="radio-inline">
+                                                <input type="radio" name="is_log_cut" value="0" v-model="is_log_cut">否
+                                            </label>
+                                             <div class="form-group">
+                                                <label>日志清理方式</label>
+                                                <input type='text' class="form-control" placeholder="清理方式" v-model.trim="log_clear">
+                                             </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>服务类型</label>
+                                            <select class="form-control" v-model="service_type">
+                                                <option value="http">http</option>
+                                                <option value="https">https</option>
+                                                <option value="other">other</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>主机类型</label>
+                                            <select class="form-control" v-model.trim="host_type">
+                                                <option value="docker虚拟机">docker虚拟机</option>
+                                                <option value="openstack机器">openstack机器</option>
+                                                <option value="IDC物理机">IDC物理机</option>
+                                                <option value="阿里云ECS">阿里云ECS</option>
+                                                <option value="aws机器">aws机器</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>主机配置</label>
+                                            <input type='text' class="form-control" placeholder="主机配置" v-model.trim="host_configuration">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>申请人</label>
+                                            <select class="form-control" v-model="applicant">
+                                                <option v-for="line in user_list" value="${line.name}" v-text="line.name"></option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>负责人</label>
+                                            <input type='text' class="form-control" placeholder="负责人" v-model.trim="manager">
+                                        </div>
+                                        <div class="form-group">
+                                            <label>发布人</label>
+                                            <select class="form-control" v-model="publisher">
+                                                <option v-for="line in user_list" value="${line.name}" v-text="line.name"></option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label>审核人</label>
+                                            <select class="form-control" v-model="checker">
+                                                <option v-for="line in user_list" value="${line.name}" v-text="line.name"></option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="InputFile">上传附件</label>
+                                            <input type="file" id="InputFile" @change="onFileChange($event)" v-model="file"><a v-if="attachment" href="{{url_for('task.show_attachment')}}?filename=${attachment}">附件:${attachment}</a>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                        </div>
+                        <div class="panel-footer">
+                            <button type="button" class="btn btn-primary" @click="create($event)">创建</button>
+                            <button type="button" class="btn btn-primary" @click="create_template($event)">保存为模板</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block bottom_js %}
+<script>
+    window.onload = function(){
+        $('#project_online').collapse('show');
+        load_user_list();
+        load_template_list();
+    };
+    data = {
+        user_list:[],
+        template_list:[],
+        template_id:'',
+        project_name:'',
+        project_domain:'',
+        applicant:'',
+        manager:'',
+        online_time:'',
+        is_test:'0',
+        emergent:'',
+        git_url:'',
+        start_command:'',
+        start_port:'',
+        is_public:'0',
+        is_nginx:'0',
+        is_crossdomain:'0',
+        is_mysql:'0',
+        is_postgresql:'0',
+        is_redis:'0',
+        redis_prefix:'',
+        is_memcache:'0',
+        is_log_cut_by_operation:'0',
+        memcache_prefix:'',
+        is_ssdb:'0',
+        ssdb_prefix:'',
+        is_kafka:'0',
+        kafka_prefix:'',
+        is_rabbitMQ:'0',
+        host_type:'',
+        host_configuration:'',
+        publisher:'',
+        checker:'',
+        is_daemon:'0',
+        daemon_mode:'',
+        is_test_url:'0',
+        test_url:'',
+        is_slb:'0',
+        ha_special:'',
+        service_type:'',
+        is_log:'0',
+        log_position:'',
+        is_log_cut:'0',
+        log_clear:'',
+        images:[],
+        attachment:'',
+        file:'',
+        errMsg:'',
+        errMsg2:'',
+    }
+    new Vue({
+        el: '.list',
+        data: data,
+        methods: {
+            create_template: function(e){
+                project_name = this.project_name;
+                git_url = this.git_url;
+                host_type = this.host_type;
+                applicant = this.applicant;
+                manager = this.manager;
+                publisher = this.publisher;
+                checker = this.checker;
+                project_domain = this.project_domain;
+                online_time = this.online_time;
+                is_test = this.is_test;
+                emergent = this.emergent;
+                start_command = this.start_command;
+                start_port = this.start_port;
+                is_public = this.is_public;
+                is_nginx = this.is_nginx;
+                is_crossdomain = this.is_crossdomain;
+                is_mysql = this.is_mysql;
+                is_postgresql = this.is_postgresql;
+                is_redis = this.is_redis;
+                redis_prefix = this.redis_prefix;
+                is_memcache = this.is_memcache;
+                memcache_prefix = this.memcache_prefix;
+                is_ssdb = this.is_ssdb;
+                ssdb_prefix = this.ssdb_prefix;
+                is_kafka = this.is_kafka;
+                kafka_prefix = this.kafka_prefix;
+                is_rabbitMQ = this.is_rabbitMQ;
+                host_configuration = this.host_configuration;
+                is_daemon = this.is_daemon;
+                daemon_mode = this.daemon_mode;
+                is_test_url = this.is_test_url;
+                test_url = this.test_url;
+                is_slb = this.is_slb;
+                ha_special = this.ha_special;
+                service_type = this.service_type;
+                is_log = this.is_log;
+                log_position = this.log_position;
+                is_log_cut = this.is_log_cut;
+                is_log_cut_by_operation = this.is_log_cut_by_operation;
+                log_clear = this.log_clear;
+                attachment = this.images;
+                file = this.file;
+                tag = e.target;
+                save_task(tag,project_name,git_url,host_type,applicant,manager,publisher,checker,project_domain,online_time,is_test,emergent,start_command,start_port,is_public,is_nginx,is_crossdomain,is_mysql,is_postgresql,is_redis,redis_prefix,is_memcache,memcache_prefix,is_ssdb,ssdb_prefix,is_kafka,kafka_prefix,is_rabbitMQ,host_configuration,is_daemon,daemon_mode,is_test_url,test_url,is_slb,ha_special,service_type,is_log,log_position,is_log_cut,is_log_cut_by_operation,log_clear,attachment,file)
+            },
+            show_template_modal: function(){
+                $('.use-template-modal').modal('show');
+            },
+            use_template: function(){
+                template_id = this.template_id;
+                use_template(template_id);
+            },
+            onFileChange(e) {
+                var files = e.target.files || e.dataTransfer.files;
+                if (!files.length)return;
+                this.createImage(files);
+            },
+            createImage(file) {
+                if(typeof FileReader === 'undefined'){
+                    alert('您的浏览器不支持图片上传，请升级您的浏览器');
+                    return false;
+                }
+                var image = new Image();
+                var vm = this;
+                var leng = file.length;
+                for(var i=0;i<leng;i++){
+                    var reader = new FileReader();
+                    reader.readAsDataURL(file[i]);
+                    reader.onload =function(e){
+                        vm.images.push(e.target.result);
+                    };
+                }
+            },
+            create: function(e){
+                project_name = this.project_name;
+                git_url = this.git_url;
+                host_type = this.host_type;
+                applicant = this.applicant;
+                manager = this.manager;
+                publisher = this.publisher;
+                checker = this.checker;
+                project_domain = this.project_domain;
+                online_time = this.online_time;
+                is_test = this.is_test;
+                emergent = this.emergent;
+                start_command = this.start_command;
+                start_port = this.start_port;
+                is_public = this.is_public;
+                is_nginx = this.is_nginx;
+                is_crossdomain = this.is_crossdomain;
+                is_mysql = this.is_mysql;
+                is_postgresql = this.is_postgresql;
+                is_redis = this.is_redis;
+                redis_prefix = this.redis_prefix;
+                is_memcache = this.is_memcache;
+                memcache_prefix = this.memcache_prefix;
+                is_ssdb = this.is_ssdb;
+                ssdb_prefix = this.ssdb_prefix;
+                is_kafka = this.is_kafka;
+                kafka_prefix = this.kafka_prefix;
+                is_rabbitMQ = this.is_rabbitMQ;
+                host_configuration = this.host_configuration;
+                is_daemon = this.is_daemon;
+                daemon_mode = this.daemon_mode;
+                is_test_url = this.is_test_url;
+                test_url = this.test_url;
+                is_slb = this.is_slb;
+                ha_special = this.ha_special;
+                service_type = this.service_type;
+                is_log = this.is_log;
+                log_position = this.log_position;
+                is_log_cut = this.is_log_cut;
+                is_log_cut_by_operation = this.is_log_cut_by_operation;
+                log_clear = this.log_clear;
+                attachment = this.images;
+                file = this.file;
+                tag = e.target;
+                save_task(tag,project_name,git_url,host_type,applicant,manager,publisher,checker,project_domain,online_time,is_test,emergent,start_command,start_port,is_public,is_nginx,is_crossdomain,is_mysql,is_postgresql,is_redis,redis_prefix,is_memcache,memcache_prefix,is_ssdb,ssdb_prefix,is_kafka,kafka_prefix,is_rabbitMQ,host_configuration,is_daemon,daemon_mode,is_test_url,test_url,is_slb,ha_special,service_type,is_log,log_position,is_log_cut,is_log_cut_by_operation,log_clear,attachment,file)
+            },
+        }
+    })
+    function use_template(template_id){
+        if(template_id.length == 0){
+            data.errMsg2 = '需要选择模板！';
+            return;
+        }
+        $.ajax({
+            url:"{{url_for('task.task_apply')}}",
+            data:{'template_id':template_id},
+            timeout:10000,
+            type:'post',
+            success: function(response){
+                console.log(response);
+                data.project_name = response.project_name;
+                data.git_url = response.git_url;
+                data.host_type = response.host_type;
+                data.applicant = response.applicant;
+                data.manager = response.manager;
+                data.publisher = response.publisher;
+                data.checker = response.checker;
+                data.project_domain = response.project_domain;
+                data.online_time = response.online_time;
+                data.is_test = response.is_test;
+                data.emergent = response.emergent;
+                data.start_command = response.start_command;
+                data.start_port = response.start_port;
+                data.is_public = response.is_public;
+                data.is_nginx = response.is_nginx;
+                data.is_crossdomain = response.is_crossdomain;
+                data.is_mysql = response.is_mysql;
+                data.is_postgresql = response.is_postgresql;
+                data.is_redis = response.is_redis;
+                data.redis_prefix = response.redis_prefix;
+                data.is_memcache = response.is_memcache;
+                data.memcache_prefix = response.memcache_prefix;
+                data.is_ssdb = response.is_ssdb;
+                data.ssdb_prefix = response.ssdb_prefix;
+                data.is_kafka = response.is_kafka;
+                data.kafka_prefix = response.kafka_prefix;
+                data.is_rabbitMQ = response.is_rabbitMQ;
+                data.host_configuration = response.host_configuration;
+                data.is_daemon = response.is_daemon;
+                data.daemon_mode = response.daemon_mode;
+                data.is_test_url = response.is_test_url;
+                data.test_url = response.test_url;
+                data.is_slb = response.is_slb;
+                data.ha_special = response.ha_special;
+                data.service_type = response.service_type;
+                data.is_log = response.is_log;
+                data.log_position = response.log_position;
+                data.is_log_cut = response.is_log_cut;
+                data.log_clear = response.log_clear;
+                data.attachment = response.attachment;
+                $('.use-template-modal').modal('hide');
+            }
+         })
+    }
+    function save_task(tag,project_name,git_url,host_type,applicant,manager,publisher,checker,project_domain,online_time,is_test,emergent,start_command,start_port,is_public,is_nginx,is_crossdomain,is_mysql,is_postgresql,is_redis,redis_prefix,is_memcache,memcache_prefix,is_ssdb,ssdb_prefix,is_kafka,kafka_prefix,is_rabbitMQ,host_configuration,is_daemon,daemon_mode,is_test_url,test_url,is_slb,ha_special,service_type,is_log,log_position,is_log_cut,is_log_cut_by_operation,log_clear,attachment,file){
+        if($.trim(project_name).length == 0){
+            data.errMsg = '项目名不能为空！';
+            return;
+        }
+        if($.trim(git_url).length == 0){
+            data.errMsg = 'git地址不能为空！';
+            return;
+        }
+        if($.trim(host_type).length == 0){
+            data.errMsg = '主机类型不能为空！';
+            return;
+        }
+        if($.trim(applicant).length == 0){
+            data.errMsg = '请选择申请人！';
+            return;
+        }
+        if($.trim(manager).length == 0){
+            data.errMsg = '请选择负责人！';
+            return;
+        }
+        if($.trim(checker).length == 0){
+            data.errMsg = '请选择审核人！';
+            return;
+        }
+        commit_data = {
+            "project_name":project_name,
+            "project_domain":project_domain,
+            "applicant":applicant,
+            "manager":manager,
+            "online_time":online_time,
+            "is_test":is_test,
+            "emergent":emergent,
+            "git_url":git_url,
+            "start_command":start_command,
+            "start_port":start_port,
+            "is_public":is_public,
+            "is_nginx":is_nginx,
+            "is_crossdomain":is_crossdomain,
+            "is_mysql":is_mysql,
+            "is_postgresql":is_postgresql,
+            "is_redis":is_redis,
+            "redis_prefix":redis_prefix,
+            "is_memcache":is_memcache,
+            "memcache_prefix":memcache_prefix,
+            "is_ssdb":is_ssdb,
+            "ssdb_prefix":ssdb_prefix,
+            "is_kafka":is_kafka,
+            "kafka_prefix":kafka_prefix,
+            "is_rabbitMQ":is_rabbitMQ,
+            "host_type":host_type,
+            "host_configuration":host_configuration,
+            "publisher":publisher,
+            "checker":checker,
+            "is_daemon":is_daemon,
+            "daemon_mode":daemon_mode,
+            "is_test_url":is_test_url,
+            "test_url":test_url,
+            "is_slb":is_slb,
+            "ha_special":ha_special,
+            "service_type":service_type,
+            "is_log":is_log,
+            "log_position":log_position,
+            "is_log_cut":is_log_cut,
+            "is_log_cut_by_operation":is_log_cut_by_operation,
+            "log_clear":log_clear,
+            "attachment":attachment,
+            'file':file,
+        }
+        text = $(tag).text();
+        if(text == '保存为模板'){
+            console.log(commit_data);
+            $.ajax({
+                url:"{{url_for('task.task_apply')}}",
+                data:{'data':JSON.stringify(commit_data),'type':'template'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "模板保存成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "模板保存失败",response.errMsg,"error");
+                    }
+                }
+            })
+        } else {
+           $.ajax({
+                url:"{{url_for('task.task_apply')}}",
+                data:{'data':JSON.stringify(commit_data),'type':'create_task'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "创建成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "创建失败",response.errMsg,"error");
+                    }
+                }
+           })
+        }
+    }
+    function load_user_list(){
+        $.ajax({
+            url:"{{url_for('auth.list_user')}}",
+            data:{'type':'task'},
+            timeout:10000,
+            type:'post',
+            success:function(response){
+                data.user_list = response;
+            }
+        })
+    }
+    function load_template_list(){
+        $.ajax({
+            url:"{{url_for('task.task_apply')}}",
+            data:{'type':'load_template'},
+            timeout:10000,
+            type:'post',
+            success:function(response){
+                data.template_list = response;
+            }
+        })
+    }
+</script>
+{% endblock %}

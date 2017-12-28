@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <a href="{{url_for('auth.list_permission')}}"><i class="fa fa-home"></i> 用户管理</a> > 权限列表
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            权限列表
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-permission-modal" data-toggle="modal">增加权限</button>
+                            <div class="modal fade add-permission-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">增加权限</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputPermissionName" class="col-sm-2 control-label">权限名称</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputPermissionName" placeholder="权限名称" v-model="permission_name">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputPermissionAliasName" class="col-sm-2 control-label">权限说明</label>
+                                                    <div class="col-sm-10">
+                                                        <input type="text" class="form-control" id="inputPermissionAliasName" placeholder="权限说明" v-model="permission_alias_name">
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="add_permission()">提交</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>编号</th>
+                                            <th>权限名称</th>
+                                            <th>权限说明</th>
+                                            <th class="dropdown">创建时间 <span class="caret" @click="sort_by_time($event)"></span></th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="permission_list" v-if="sort.length == 0">
+                                        {% for permission in permissions %}
+                                        <tr>
+                                            <td>{{permission.id}}</td>
+                                            <td>{{permission.name}}</td>
+                                            <td>{{permission.alias_name}}</td>
+                                            <td>{{permission.create_time}}</td>
+                                            <td><span class="label label-success" style="margin-right:10px" @click="modify_permission('{{permission.id}}','{{permission.name}}','{{permission.alias_name}}',$event)" id="modify">修改</span><span class="label label-danger" style="margin-right:10px" @click="delete_permission('{{permission.id}}')">删除</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tbody id="permission_list" v-if="sort">
+                                        {% for permission in permissions | reverse %}
+                                        <tr>
+                                            <td>{{permission.id}}</td>
+                                            <td>{{permission.name}}</td>
+                                            <td>{{permission.alias_name}}</td>
+                                            <td>{{permission.create_time}}</td>
+                                            <td><span class="label label-success" style="margin-right:10px" @click="modify_permission('{{permission.id}}','{{permission.name}}','{{permission.alias_name}}',$event)" id="modify">修改</span><span class="label label-danger" style="margin-right:10px" @click="delete_permission('{{permission.id}}')">删除</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if pagination %}
+                                <div class="pagination" style="float:right">
+                                    {{ page.pagination_widget(pagination,".list_permission") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+    <script>
+        window.onload = function(){
+            $('#user_manage').collapse('show');
+        };
+        data = {
+            permission_name:'',
+            permission_alias_name:'',
+            errMsg:'',
+            sort:'',
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                add_permission: function(){
+                    add_permission(this.permission_name,this.permission_alias_name);
+                },
+                delete_permission: function(permission_id){
+                    delete_permission(permission_id);
+                },
+                modify_permission: function(id,name,alias_name,e){
+                    tag = e.target;
+                    modify_permission(id,name,alias_name,tag);
+                },
+                sort_by_time: function(e){
+                    tag = e.target;
+                    sort_by_time(tag);
+                },
+            }
+        })
+        var ret = true;
+        function sort_by_time(tag){
+            var th = $(tag).parent();
+            if(ret){
+                th.attr('class','dropup');
+                ret = false;
+                data.sort = 'desc';
+            } else {
+                th.attr('class','dropdown');
+                ret = true;
+                data.sort = '';
+            }
+        }
+        function modify_permission(id,name,alias_name,tag){
+            td1 = $(tag).parent().parent().find('td').eq(1);
+            td2 = $(tag).parent().parent().find('td').eq(2);
+            if( td1.hasClass('modify') && td2.hasClass('modify')){
+                var new_name = td1.find('input').eq(0).val();
+                var new_alias_name = td2.find('input').eq(0).val();
+                if($.trim(new_name) == name && alias_name == $.trim(new_alias_name)){
+                    return;
+                }
+                if($.trim(new_name) != name || alias_name != $.trim(new_alias_name)){
+                    $.ajax({
+                        url:"{{url_for('auth.list_permission')}}",
+                        data:{'permission_id':id,'permission_name':$.trim(new_name),'permission_alias_name':$.trim(new_alias_name),'type':'modify'},
+                        timeout:10000,
+                        type:'post',
+                        success:function(response){
+                            if(response.result == 1){
+                                swal({
+                                    "title": "修改成功",
+                                    "text": "",
+                                    "type": "success"
+                                    }, function () {
+                                        setTimeout(function () {
+                                            window.location.reload();
+                                    }, 50);
+                                })
+                            } else {
+                                swal( "修改失败",'',"error");
+                            }
+                        }
+                    })
+                }
+            } else {
+                td1.addClass('modify');
+                td2.addClass('modify')
+                td1.html("<input type='text' name='name' value="+name+">");
+                td2.html("<input type='text' name='alias_name' value="+alias_name+">");
+            }
+        }
+        function delete_permission(permission_id){
+             $.ajax({
+                url:"{{url_for('auth.list_permission')}}",
+                data:{'permission_id':permission_id},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    console.log(response);
+                    if(response.result == 1){
+                        swal({
+                            "title": "删除成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                        })
+                    } else {
+                        swal( "删除失败",'',"error");
+                    }
+                }
+            })
+        }
+        function add_permission(permission_name,permission_alias_name){
+            var permission_name = $.trim(permission_name);
+            var permission_alias_name = $.trim(permission_alias_name);
+            if(permission_name == ''){
+                data.errMsg = '权限名称不能为空！';
+                return;
+            }
+            if(permission_alias_name == ''){
+                data.errMsg = '权限说明不能为空！';
+                return;
+            }
+            console.log(permission_name+','+permission_alias_name);
+            $.ajax({
+                url:"{{url_for('auth.list_permission')}}",
+                data:{'permission_name':permission_name,'permission_alias_name':permission_alias_name},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    console.log(response);
+                    if(response.result == -1){
+                        swal(
+                            "添加权限出错",response.errMsg,"error"
+                        )
+                    } else {
+                        swal({
+                            "title": "添加成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                        })
+                    }
+                }
+            })
+        }
+    </script>
+{% endblock %}

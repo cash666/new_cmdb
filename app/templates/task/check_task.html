@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <i class="fa fa-home"></i> 项目上线 > 上线审核
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            待审核工单列表
+                        </div>
+                        <div class="panel-body">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>编号</th>
+                                            <th>工单名称</th>
+                                            <th>git地址</th>
+                                            <th>上线时间</th>
+                                            <th>紧急程度</th>
+                                            <th>负责人</th>
+                                            <th>申请人</th>
+                                            <th>发布人</th>
+                                            <th class="dropdown">创建时间 <span class="caret" @click="sort_by_time($event)"></span></th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody v-if="sort.length == 0">
+                                        {% for task in check_tasks %}
+                                        <tr>
+                                            <td>{{task.id}}</td>
+                                            <td><a @click="show_info('{{task.id}}')" data-toggle="modal">{{task.project_name}}</a></td>
+                                            <td>{{task.git_url}}</td>
+                                            <td v-if="{{task.online_time}}">{{task.online_time}}</td>
+                                            <td v-else>-</td>
+                                            <td v-if="{{task.emergent}}">{{task.emergent}}</td>
+                                            <td v-else>-</td>
+                                            <td>{{task.manager}}</td>
+                                            <td>{{task.applicant}}</td>
+                                            <td>{{task.publisher}}</td>
+                                            <td>{{task.create_time}}</td>
+                                            <td><span class="label label-success" @click="check_task('{{task.id}}','{{task.applicant}}',$event)">通过</span><span class="label label-danger" style="margin-left:10px" @click="show_reject_modal('{{task.id}}','{{task.applicant}}')">拒绝</span><span class="label label-primary" @click="update_publisher('{{task.id}}',$event)" style="margin-left:10px">更改发布人</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                    <tbody v-if="sort">
+                                        {% for task in check_tasks | reverse %}
+                                        <tr>
+                                            <td>{{task.id}}</td>
+                                            <td><a @click="show_info('{{task.id}}')" data-toggle="modal">{{task.project_name}}</a></td>
+                                            <td>{{task.git_url}}</td>
+                                            <td>{{task.online_time}}</td>
+                                            <td>{{task.emergent}}</td>
+                                            <td>{{task.manager}}</td>
+                                            <td>{{task.applicant}}</td>
+                                            <td>{{task.publisher}}</td>
+                                            <td>{{task.create_time}}</td>
+                                            <td><span class="label label-success" @click="check_task('{{task.id}}','{{task.applicant}}',$event)">通过</span><span class="label label-danger" style="margin-left:10px" @click="show_reject_modal('{{task.id}}','{{task.applicant}}',$event)" data-toggle="modal">拒绝</span><span class="label label-primary" @click="update_publisher('{{task.id}}',$event)" style="margin-left:10px">更改发布人</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if pagination %}
+                                <div class="pagination" style="float:right">
+                                    {{ page.pagination_widget(pagination,".task_check") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade task-info-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">任务详情</h4>
+                        </div>
+                        <div class="modal-body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <tbody>
+                                        <tr>
+                                            <td>项目名:${task_info.project_name}</td>
+                                            <td>项目域名:${task_info.project_domain}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>负责人:${task_info.manager}</td>
+                                            <td>申请人:${task_info.applicant}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>审核人:${task_info.checker}</td>
+                                            <td>发布人:${task_info.publisher}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>紧急程度:${task_info.emergent}</td>
+                                            <td>git地址:${task_info.git_url}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>上线时间:<span class="label label-success" v-if="task_info.online_time != '-'" v-text="task_info.online_time"></span></td>
+                                            <td>任务创建时间:${task_info.create_time}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>启动命令:${task_info.start_command}</td>
+                                            <td>启动端口:${task_info.start_port}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否需要公网: <span class="label label-success" v-if="task_info.is_public">是</span><span v-else>-</span></td>
+                                            <td>是否需要nginx: <span class="label label-success" v-if="task_info.is_nginx">是</span><span v-else>-</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否跨域: <span class="label label-success" v-if="task_info.is_crossdomain">是</span><span v-else>-</span></td>
+                                            <td>是否需要mysql: <span class="label label-success" v-if="task_info.is_mysql">是</span><span v-else>-</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否需要postgresql: <span class="label label-success" v-if="task_info.is_postgresql">是</span><span v-else></span>-</td>
+                                            <td>是否需要redis: <span class="label label-success" v-if="task_info.is_redis">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.is_redis">redis前缀:${task_info.redis_prefix}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否需要rabbitMQ: <span class="label label-success" v-if="task_info.is_rabbitMQ">是</span><span v-else>-</span></td>
+                                            <td>是否需要memecache: <span class="label label-success" v-if="task_info.is_memecache">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.is_memcache">memcache前缀:${task_info.memcache_prefix}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>服务类型:${task_info.service_type}</td>
+                                            <td>是否需要ssdb: <span class="label label-success" v-if="task_info.is_ssdb">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.is_ssdb">ssdb前缀:${task_info.ssdb_prefix}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>审核状态:${task_info.check_status}</td>
+                                            <td>是否需要kafka: <span class="label label-success" v-if="task_info.is_kafka">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.is_kafka">kafka前缀:${task_info.kafka_prefix}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否需要测试: <span class="label label-success" v-if="task_info.is_test">是</span><span v-else>-</span></td>
+                                            <td>是否提供测试地址: <span class="label label-success" v-if="task_info.is_test_url">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.is_test_url">测试地址:${task_info.test_url}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>有无附件: <span class="label label-success" v-if="task_info.attachment != '-'">有</span><span v-else>-</span></td>
+                                            <td>是否需要slb: <span class="label label-success" v-if="task_info.is_slb">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.ha_special != '-'">HA配置特殊需求:${task_info.ha_special}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>主机类型:${task_info.host_type}</td>
+                                            <td>主机配置:${task_info.host_configuration}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否提供程序日志: <span class="label label-success" v-if="task_info.is_log">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.log_position != '-'">日志位置:${task_info.log_position}</td>
+                                            <td v-if="task_info.log_special_position != '-'">日志特殊位置:${task_info.log_special_position}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>是否程序自动切割日志: <span class="label label-success" v-if="task_info.is_log_cut">是</span><span v-else>-</span></td>
+                                            <td v-if="task_info.log_clear != '-'">日志清理方式:${task_info.log_clear}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade reject-task-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">拒绝原因</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="inputRejectReason" class="col-sm-2 control-label">原因</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="inputRejectReason" placeholder="填写原因" v-model="reject_reason">
+                                    </div>
+                                </div>
+                            </form>
+                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            <button type="button" class="btn btn-primary"  @click="check_task(task_id,applicant,$event)">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+    <script>
+        window.onload = function(){
+            $('#project_online').collapse('show');
+            load_user_list();
+        };
+        data = {
+            task_info:'',
+            sort:'',
+            reject_reason:'',
+            errMsg:'',
+            task_id:'',
+            applicant:'',
+            user_list:[],
+            publisher:'',
+            task_id2:'',
+            old_publisher:'',
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                check_task: function(task_id,applicant,e){
+                    tag = e.target;
+                    if(this.task_id){
+                        task_id = this.task_id;
+                    }
+                    if(this.applicant){
+                        applicant = this.applicant;
+                    }
+                    check_task(task_id,applicant,tag);
+                },
+                sort_by_time: function(e){
+                    tag = e.target;
+                    sort_by_time(tag);
+                },
+                show_info: function(task_id){
+                    $('.task-info-modal').modal('show');
+                    show_info(task_id);
+                },
+                show_reject_modal: function(task_id,applicant){
+                    this.task_id = task_id;
+                    this.applicant = applicant
+                    $('.reject-task-modal').modal('show');
+                },
+                update_publisher: function(task_id,e){
+                   this.task_id2 = task_id;
+                   tag = e.target;
+                   update_publisher(task_id,tag);
+                },
+            }
+        })
+        function commit_publisher(){
+            task_id = data.task_id2;
+            old_publisher = data.old_publisher;
+            publisher = $('#publisher_select').find('option:selected').text();
+            if(publisher != old_publisher && publisher){
+                $.ajax({
+                    url:"{{url_for('task.task_check')}}",
+                    data:{'task_id':task_id,'publisher':publisher},
+                    timeout:10000,
+                    type:'post',
+                    success: function(response){
+                        window.location.reload();
+                    }
+                })
+            }
+        }
+        function update_publisher(task_id,tag){
+            td = $(tag).parent().parent().find('td').eq(7);
+            text = td.text();
+            data.old_publisher = text;
+            html = "<select id='publisher_select' onchange='commit_publisher()'>"
+            for(var i in data.user_list){
+                if(data.user_list[i].name == text){
+                    html += '<option value="'+data.user_list[i].name+'" selected>'+data.user_list[i].name+"</option>"
+                } else {
+                    html += '<option value="'+data.user_list[i].name+'">'+data.user_list[i].name+"</option>"
+                }
+            }
+            html += "</select>"
+            td.html(html)
+            $(tag).addClass('disabled');
+        }
+        function show_info(task_id){
+            $.ajax({
+                url:"{{url_for('task.task_check')}}",
+                data:{'task_id':task_id},
+                timeout:10000,
+                type:'post',
+                success: function(response){
+                    data.task_info = response;
+                }
+            })
+        }
+        function check_task(task_id,applicant,tag){
+            var text = $(tag).text();
+            if(text == '通过'){
+                status = '1'
+            } else {
+                console.log(task_id+','+applicant+','+status);
+                status = '0'
+                if($.trim(data.reject_reason).length == 0){
+                    data.errMsg = '请填写拒绝原因！';
+                    return;
+                }
+            }
+
+            $.ajax({
+                url:"{{url_for('task.task_check')}}",
+                data:{'task_id':task_id,'status':status,'applicant':applicant,'reject_reason':data.reject_reason},
+                timeout:10000,
+                type:'post',
+                success: function(){
+                    window.location.reload();
+                }
+            })
+        }
+        var ret = true;
+        function sort_by_time(tag){
+            var th = $(tag).parent();
+            if(ret){
+                th.attr('class','dropup');
+                ret = false;
+                data.sort = 'desc';
+            } else {
+                th.attr('class','dropdown');
+                ret = true;
+                data.sort = '';
+            }
+        }
+         function load_user_list(){
+            $.ajax({
+                url:"{{url_for('auth.list_user')}}",
+                data:{'type':'task'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.user_list = response;
+                }
+            })
+         }
+    </script>
+{% endblock %}

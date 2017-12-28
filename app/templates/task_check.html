@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CMDB系统项目上线审核状态通知</title>
+</head>
+<body>
+    <p>Dear {{applicant}}:</p>
+    <p>您申请的项目{{project_name}}，{% if status == '1' %}目前已经通过审核，目前正在进行上线操作! {% else %}目前已经被拒绝，原因是{{reject_reason}}，请联系审核人员了解详细情况！{% endif %}</p>
+    <p>Regards！</p>
+    <p>系统邮件请勿回复！</p>
+</body>
+</html>

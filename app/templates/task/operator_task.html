@@ -1,0 +1,498 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <i class="fa fa-home"></i> 项目上线 > 上线操作
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="accordion" role="tablist" aria-multiselectable="true">
+                        {% for task in unoperatored_tasks %}
+                        <div class="panel panel-success">
+                            <div class="panel-heading" role="tab" id="heading{{task.id}}">
+                                <h4 class="panel-title">
+                                    <a data-toggle="collapse" data-parent="#accordion" href="#collapse{{task.id}}" aria-expanded="true" aria-controls="collapse{{task.id}}">
+                                        任务{{loop.index}}: {{task.project_name}}
+                                    </a>
+                                    <span href="#" class="btn btn-success btn-sm" style="float:right;margin-top:-10px" @click="finish_project('{{task.id}}')">上线完成</span>
+                                    <span href="#" class="btn btn-warning btn-sm" style="float:right;margin-top:-10px;margin-right:5px" @click="show_add_info_modal('{{task.id}}')">完善项目信息</span>
+                                </h4>
+                            </div>
+                            <div id="collapse{{task.id}}" class="panel-collapse collapse" role="tabpanel" aria-labelledby="heading{{task.id}}">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <tbody>
+                                            <tr>
+                                                <td>项目名: {{task.project_name}}</td>
+                                                <td>项目域名: {{task.project_domain}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>负责人: {{task.manager}}</td>
+                                                <td>申请人: {{task.applicant}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>审核人: {{task.checker}}</td>
+                                                <td>发布人: {{task.publisher}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>紧急程度: {{task.emergent}}</td>
+                                                <td>git地址: {{task.git_url}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>上线时间: {{task.online_time}}</td>
+                                                <td>任务创建时间: {{task.create_time}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>启动命令: {{task.start_command}}</td>
+                                                <td>启动端口: {{task.start_port}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>是否需要公网: {% if task.is_public %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                <td>是否需要nginx: {% if task.is_nginx %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>是否跨域: {% if task.is_crossdomain %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                <td>是否需要mysql: {% if task.is_mysql %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>是否需要postgresql: {% if task.is_postgresql %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                <td>是否需要redis: {% if task.is_redis %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_redis %}
+                                                    <td>redis端口: {{task.redis_port}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>是否需要rabbitMQ: {% if task.is_rabbitMQ %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                <td>是否需要memecache: {% if task.is_memecache %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_memecache %}
+                                                    <td>memcache端口:{{task.memcache_port}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>服务类型: {{task.service_type}}</td>
+                                                <td>是否需要ssdb: {% if task.is_ssdb %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_ssdb %}
+                                                    <td>ssdb端口:{{task.ssdb_port}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>是否需要kafka: {% if task.is_kafka %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_kafka %}
+                                                    <td>kafka端口: {{task.kafka_port}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>是否需要测试: {% if task.is_test %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                <td>是否提供测试地址: {% if task.is_test_url %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_test_url %}
+                                                    <td>测试地址: {{task.test_url}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>有无附件: {% if task.attachment %}<span class="glyphicon glyphicon-ok"></span> <a href="{{url_for('task.show_attachment')}}?filename={{task.attachment|split_str}}">下载</a>{% else %}-{% endif %}</td>
+                                                <td>是否需要slb: {% if task.is_slb %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_slb %}
+                                                    <td>HA配置特殊需求: {{task.ha_special}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>主机类型: {{task.host_type}}</td>
+                                                <td>主机配置: {{task.host_configuration}}</td>
+                                            </tr>
+                                            <tr>
+                                                <td>是否提供程序日志: {% if task.is_log %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                {% if task.is_log %}
+                                                    <td>日志位置: {{task.log_position}}</td>
+                                                {% endif %}
+                                                {% if task.log_special_position %}
+                                                    <td>日志特殊位置:{{task.log_special_position}}</td>
+                                                {% endif %}
+                                            </tr>
+                                            <tr>
+                                                <td>是否程序自动切割日志: {% if task.is_log_cut %}<span class="glyphicon glyphicon-ok"></span>{% else %}-{% endif %}</td>
+                                                <td>日志清理方式: {{task.log_clear}}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal fade add-info-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel">项目信息完善</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label>前端是否需要CDN</label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="is_front_cdn" value="1" v-model="is_front_cdn">是
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="is_front_cdn" value="0" v-model="is_front_cdn">否
+                                    </label>
+                                    <div v-if="is_front_cdn == 1">
+                                        <label>前端缓存方式</label>
+                                        <input type='text' class="form-control" v-model.trim="front_cache_method">
+                                    </div>
+                                    <div v-if="is_front_cdn == 1">
+                                        <label>前端CDN厂商</label>
+                                        <input type='text' class="form-control" v-model.trim="front_cdn_manufacturer">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>后端是否需要CDN</label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="is_back_cdn" value="1" v-model="is_back_cdn">是
+                                    </label>
+                                    <label class="radio-inline">
+                                        <input type="radio" name="is_back_cdn" value="0" v-model="is_back_cdn">否
+                                    </label>
+                                    <div v-if="is_back_cdn == 1">
+                                        <label>后端缓存方式</label>
+                                        <input type='text' class="form-control" v-model.trim="back_cache_method">
+                                    </div>
+                                    <div v-if="is_back_cdn == 1">
+                                        <label>后端CDN厂商</label>
+                                        <input type='text' class="form-control" v-model.trim="back_cdn_manufacturer">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>主机IP</label>
+                                    <input type='text' class="form-control" placeholder="主机IP(若有两个可写在一起，逗号分隔)" v-model.trim="host_ip">
+                                </div>
+                                <div class="form-group" v-if="is_mysql || is_postgresql">
+                                    <label>数据库IP</label>
+                                    <input type='text' class="form-control" v-model.trim="db_ip">
+                                    <label>数据库名称</label>
+                                    <input type='text' class="form-control" v-model.trim="db_name">
+                                </div>
+                                <div class="form-group" v-if="is_redis">
+                                    <label>Redis IP</label>
+                                    <input type='text' class="form-control" v-model.trim="redis_ip">
+                                    <label>Redis端口</label>
+                                    <input type='text' class="form-control" v-model.trim="redis_port">
+                                </div>
+                                <div class="form-group" v-if="is_memcache">
+                                    <label>Memcache IP</label>
+                                    <input type='text' class="form-control" v-model.trim="memcache_ip">
+                                    <label>Memcache端口</label>
+                                    <input type='text' class="form-control" v-model.trim="memcache_port">
+                                </div>
+                                <div class="form-group" v-if="is_ssdb">
+                                    <label>ssdb IP</label>
+                                    <input type='text' class="form-control" v-model.trim="ssdb_ip">
+                                    <label>ssdb端口</label>
+                                    <input type='text' class="form-control" v-model.trim="ssdb_port">
+                                </div>
+                                <div class="form-group" v-if="is_kafka">
+                                    <label>Kafka IP</label>
+                                    <input type='text' class="form-control" v-model.trim="kafka_ip">
+                                    <label>Kafka端口</label>
+                                    <input type='text' class="form-control" v-model.trim="kafka_port">
+                                </div>
+                                <div class="form-group" v-if="is_rabbitMQ">
+                                    <label>RabbitMQ IP</label>
+                                    <input type='text' class="form-control" v-model.trim="rabbitMQ_ip">
+                                    <label>RabbitMQ端口</label>
+                                    <input type='text' class="form-control" v-model.trim="rabbitMQ_port">
+                                </div>
+                                <div class="form-group">
+                                    <label>备注</label>
+                                    <input type='text' class="form-control" v-model.trim="comment">
+                                </div>
+                            </form>
+                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            <button type="button" class="btn btn-primary"  @click="add_project_info()">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+    <script src="{{ url_for('static',filename='js/jquery-timeline.js') }}"></script>
+    <script>
+        window.onload = function(){
+            $('#project_online').collapse('show');
+        };
+        data = {
+            'task_id':'',
+            'is_mysql':'',
+            'is_postgresql':'',
+            'is_redis':'',
+            'is_memcache':'',
+            'is_ssdb':'',
+            'is_kafka':'',
+            'is_rabbitMQ':'',
+            'is_front_cdn':'',
+            'is_back_cdn':'',
+            'front_cache_method':'',
+            'back_cache_method':'',
+            'front_cdn_manufacturer':'',
+            'back_cdn_manufacturer':'',
+            'host_ip':'',
+            'db_ip':'',
+            'db_name':'',
+            'redis_ip':'',
+            'redis_port':'',
+            'memcache_ip':'',
+            'memcache_port':'',
+            'ssdb_ip':'',
+            'ssdb_port':'',
+            'kafka_ip':'',
+            'kafka_port':'',
+            'rabbitMQ_ip':'',
+            'rabbitMQ_port':'',
+            'comment':'',
+            'errMsg':'',
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                show_add_info_modal: function(task_id) {
+                    get_project_info(task_id);
+                    this.task_id = task_id;
+                    $('.add-info-modal').modal('show');
+                },
+                add_project_info: function(){
+                    is_mysql = data.is_mysql;
+                    is_postgresql = data.is_postgresql;
+                    is_redis = data.is_redis;
+                    is_memcache = data.is_memcache;
+                    is_ssdb = data.is_ssdb;
+                    is_kafka = data.is_kafka;
+                    is_rabbitMQ = data.is_rabbitMQ;
+                    is_front_cdn = data.is_front_cdn;
+                    is_back_cdn = data.is_back_cdn;
+                    front_cache_method = data.front_cache_method;
+                    back_cache_method = data.back_cache_method;
+                    front_cdn_manufacturer = data.front_cdn_manufacturer;
+                    back_cdn_manufacturer = data.back_cdn_manufacturer;
+                    host_ip = data.host_ip;
+                    db_ip = data.db_ip;
+                    db_name = data.db_name;
+                    redis_ip = data.redis_ip;
+                    redis_port = data.redis_port;
+                    memcache_ip = data.memcache_ip;
+                    memcache_port = data.memcache_port;
+                    ssdb_ip = data.ssdb_ip;
+                    ssdb_port = data.ssdb_port;
+                    kafka_ip = data.kafka_ip;
+                    kafka_port = data.kafka_port;
+                    rabbitMQ_ip = data.rabbitMQ_ip;
+                    rabbitMQ_port = data.rabbitMQ_port;
+                    comment = data.comment;
+                    task_id = this.task_id;
+                    add_project_info(task_id,is_mysql,is_postgresql,is_redis,is_memcache,is_ssdb,is_kafka,is_rabbitMQ,is_front_cdn,is_back_cdn,front_cache_method,back_cache_method,front_cdn_manufacturer,back_cdn_manufacturer,host_ip,db_ip,db_name,redis_ip,redis_port,memcache_ip,memcache_port,ssdb_ip,ssdb_port,kafka_ip,kafka_port,rabbitMQ_ip,rabbitMQ_port,comment);
+                },
+                finish_project: function(task_id){
+                    finish_project(task_id);
+                }
+            }
+        })
+        function finish_project(task_id){
+            swal({
+                title: "确定上线完成吗？",
+                text: "确保项目信息补充完整，然后所有上线操作都完成才能点击哦！",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定上线！",
+                closeOnConfirm: false
+            },
+            function(isConfirm){
+                if(isConfirm){
+                    $.ajax({
+                        url:"{{url_for('task.task_operator')}}",
+                        data:{'task_id':task_id,'type':'finish'},
+                        timeout:10000,
+                        type:'post',
+                        success: function(response){
+                            if(response.result == 1){
+                                swal({
+                                    "title": "提交成功",
+                                    "text": "",
+                                    "type": "success"
+                                    }, function () {
+                                        setTimeout(function () {
+                                            window.location.reload();
+                                        }, 50);
+                                    }
+                                )
+                            } else {
+                                swal( "提交失败",response.errMsg,"error");
+                            }
+                        }
+                    })
+                }
+            });
+        }
+        function add_project_info(task_id,is_mysql,is_postgresql,is_redis,is_memcache,is_ssdb,is_kafka,is_rabbitMQ,is_front_cdn,is_back_cdn,front_cache_method,back_cache_method,front_cdn_manufacturer,back_cdn_manufacturer,host_ip,db_ip,db_name,redis_ip,redis_port,memcache_ip,memcache_port,ssdb_ip,ssdb_port,kafka_ip,kafka_port,rabbitMQ_ip,rabbitMQ_port,comment){
+            if(is_front_cdn == '1'){
+                if($.trim(front_cache_method).length == 0){
+                    data.errMsg = '前端缓存方式不能为空！';
+                    return;
+                }
+                if($.trim(front_cdn_manufacturer).length == 0){
+                    data.errMsg = '前端CDN厂商不能为空！';
+                    return;
+                }
+            }
+            if(is_back_cdn == '1'){
+                if($.trim(back_cache_method).length == 0){
+                    data.errMsg = '后端缓存方式不能为空！';
+                    return;
+                }
+                if($.trim(back_cdn_manufacturer).length == 0){
+                    data.errMsg = '后端CDN厂商不能为空！';
+                    return;
+                }
+            }
+            if($.trim(host_ip).length == 0){
+                data.errMsg = '主机的P不能为空！';
+                return;
+            }
+            if(is_mysql || is_postgresql){
+                if($.trim(db_ip).length == 0){
+                    data.errMsg = '数据库IP不能为空！';
+                    return;
+                }
+                if($.trim(db_name).length == 0){
+                    data.errMsg = '数据库名称不能为空！';
+                    return;
+                }
+            }
+            if(is_redis){
+                if($.trim(redis_ip).length == 0){
+                    data.errMsg = 'Redis的IP不能为空！';
+                    return;
+                }
+                if($.trim(redis_port).length == 0){
+                    data.errMsg = 'Redis的端口不能为空！';
+                    return;
+                }
+            }
+            if(is_memcache){
+                if($.trim(memcache_ip).length == 0){
+                    data.errMsg = 'Memcache的IP不能为空！';
+                    return;
+                }
+                if($.trim(memcache_port).length == 0){
+                    data.errMsg = 'Memcache的端口不能为空！';
+                    return;
+                }
+            }
+            if(is_ssdb){
+                if($.trim(ssdb_ip).length == 0){
+                    data.errMsg = 'ssdb的IP不能为空！';
+                    return;
+                }
+                if($.trim(ssdb_port).length == 0){
+                    data.errMsg = 'ssdb的端口不能为空！';
+                    return;
+                }
+            }
+            if(is_kafka){
+                if($.trim(kafka_ip).length == 0){
+                    data.errMsg = 'Kafka的IP不能为空！';
+                    return;
+                }
+                if($.trim(kafka_port).length == 0){
+                    data.errMsg = 'Kafka的端口不能为空！';
+                    return;
+                }
+            }
+            if(is_rabbitMQ){
+                if($.trim(rabbitMQ_ip).length == 0){
+                    data.errMsg = 'RabbitMQ的IP不能为空！';
+                    return;
+                }
+                if($.trim(rabbitMQ_port).length == 0){
+                    data.errMsg = 'RabbitMQ的端口不能为空！';
+                    return;
+                }
+            }
+            add_info = {
+                "is_front_cdn" : is_front_cdn,
+                "is_back_cdn" : is_back_cdn,
+                "front_cache_method" : front_cache_method,
+                "back_cache_method" : back_cache_method,
+                "front_cdn_manufacturer" : front_cdn_manufacturer,
+                "back_cdn_manufacturer" : back_cdn_manufacturer,
+                "host_ip" : host_ip,
+                "db_ip" : db_ip,
+                "db_name" : db_name,
+                "redis_ip" : redis_ip,
+                "redis_port" : redis_port,
+                "memcache_ip" : memcache_ip,
+                "memcache_port" : memcache_port,
+                "ssdb_ip" : ssdb_ip,
+                "ssdb_port" : ssdb_port,
+                "kafka_ip" : kafka_ip,
+                "kafka_port" : kafka_port,
+                "rabbitMQ_ip" : rabbitMQ_ip,
+                "rabbitMQ_port" : rabbitMQ_port,
+                "comment" : comment,
+            }
+            $.ajax({
+                url:"{{url_for('task.task_operator')}}",
+                data:{'data':JSON.stringify(add_info),'task_id':task_id},
+                timeout:10000,
+                type:'post',
+                success: function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "提交成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "提交失败",'',"error");
+                    }
+                }
+            })
+        }
+        function get_project_info(task_id){
+             $.ajax({
+                url:"{{url_for('task.task_operator')}}",
+                data:{'task_id':task_id},
+                timeout:10000,
+                type:'post',
+                success: function(response){
+                    data.is_mysql = response.is_mysql;
+                    data.is_postgresql = response.is_postgresql;
+                    data.is_redis = response.is_redis;
+                    data.is_memcache = response.is_memcache;
+                    data.is_ssdb = response.is_ssdb;
+                    data.is_kafka = response.is_kafka;
+                    data.is_rabbitMQ = response.is_rabbitMQ;
+                }
+             })
+        }
+
+    </script>
+{% endblock %}

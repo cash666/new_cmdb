@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>葡萄科技CMDB系统</title>
+    <!-- Bootstrap Styles-->
+    <link href="{{ url_for('static',filename='css/bootstrap.css') }}" rel="stylesheet" />
+    <!-- FontAwesome Styles-->
+    <link href="{{ url_for('static',filename='css/font-awesome.css') }}" rel="stylesheet" />
+    <!-- Custom Styles-->
+    <link href="{{ url_for('static',filename='css/custom-styles.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static',filename='css/style.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static',filename='css/sweet-alert.css') }}" rel="stylesheet" />
+    <!--<link href="{{ url_for('static',filename='css/laydate.css') }}" rel="stylesheet" />-->
+    <link rel="shortcut icon" href="{{ url_for('static',filename='image/favicon.ico') }}" type="image/x-icon">
+    <!-- Google Fonts-->
+    <!--<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />-->
+    {% block header_css %}
+    {% endblock %}
+</head>
+
+<body>
+    <div id="wrapper">
+        <nav class="navbar navbar-default top-navbar" role="navigation" id="navbar_user">
+            <div class="navbar-header">
+                <a class="navbar-brand" href="{{ url_for('main.index') }}">CMDB</a>
+            </div>
+            <ul class="nav navbar-top-links navbar-right">
+		    {% if current_user.is_authenticated %}
+                <li class="dropdown">
+                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" aria-expanded="false">
+                        欢迎你，{{current_user.name}} <i class="fa fa-caret-down"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-user">
+                        <li><a href="#" id="user_modify" @click="show_password_modal()"><i class="fa fa-edit fa-fw"></i> 修改密码</a></li>
+                        <li class="divider"></li>
+                        <li><a href="{{ url_for('auth.logout') }}"><i class="fa fa-sign-out fa-fw"></i>退出</a>
+                        </li>
+                    </ul>
+                    <!-- /.dropdown-user -->
+                </li>
+		    {% else %}
+		        <li><a href="{{ url_for('auth.login') }}">登录</a></li>
+		    {% endif %}
+                <!-- /.dropdown -->
+            </ul>
+            <div class="modal fade modify-password-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel3">密码修改</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="inputPassword" class="col-sm-3 control-label">新密码</label>
+                                    <div class="col-sm-9">
+                                        <input type="password" class="form-control" id="inputPassword" placeholder="新密码" v-model.trim="new_password">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputPassword2" class="col-sm-3 control-label">新密码确认</label>
+                                    <div class="col-sm-9">
+                                        <input type="password" class="form-control" id="inputPassword2" placeholder="新密码确认" v-model.trim="new_password2">
+                                    </div>
+                                </div>
+                            </form>
+                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            <button type="button" class="btn btn-primary"  @click="modify_password()">提交</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        <!--/. NAV TOP  -->
+        <nav class="navbar-default navbar-side" role="navigation">
+            <div class="sidebar-collapse">
+                <ul class="nav" id="main-menu">
+                    <li>
+                        <a href="{{url_for('main.index')}}"><i class="fa fa-dashboard"></i>控制台</a>
+                    </li>
+                    <li>
+                        <a style="color:#999;" data-toggle="collapse" data-target="#asset_manage" aria-expanded="false" aria-controls="asset_manage"><i class="fa fa-list"></i>资产管理<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level collapse" id="asset_manage">
+                            <li>
+                                <a {% if menu == 'idc_list' %} class="active-menu" {% endif %} href="{{url_for('asset.idc_list')}}">机房列表</a>
+                            </li>
+                            <li>
+                                <a {% if menu == 'asset_group_list' %} class="active-menu" {% endif %} href="{{url_for('asset.asset_group_list')}}">资产组</a>
+                            </li>
+                            <li>
+                                <a {% if menu == 'asset_list' %} class="active-menu" {% endif %} href="{{url_for('asset.asset_list')}}">资产列表</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a style="color:#999;" data-toggle="collapse" data-target="#project_online" aria-expanded="false" aria-controls="project_online"><i class="fa fa-tasks"></i>项目上线<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level collapse" id="project_online">
+                            <li>
+                                <a {% if menu == 'create_task' %} class="active-menu" {% endif %} href="{{url_for('task.task_apply')}}">上线申请</a>
+                            </li>
+                            <li>
+                                <a {% if menu == 'check_task_list' %} class="active-menu" {% endif %} href="{{url_for('task.task_check')}}">上线审核 <span class="badge">{% if current_user.uncheck_tasks() > 0 %}{{current_user.uncheck_tasks()}}{% endif %}</span></a>
+                            </li>
+                             <li>
+                                <a {% if menu == 'operator_task_list' %} class="active-menu" {% endif %} href="{{url_for('task.task_operator')}}">上线操作 <span class="badge">{% if current_user.unfinish_tasks() > 0 %} {{current_user.unfinish_tasks()}}{% endif %}</span></a>
+                            </li>
+                             <li>
+                                <a {% if menu == 'completed_task_list' %} class="active-menu" {% endif %} href="{{url_for('task.task_list')}}">项目列表</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a style="color:#999;" data-toggle="collapse" data-target="#user_manage" aria-expanded="false" aria-controls="user_manage"><i class="fa fa-users"></i>用户管理<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level collapse" id="user_manage">
+                            <li>
+                                <a {% if menu == 'user_list' %} class="active-menu" {% endif %} href="{{url_for('auth.list_user')}}">用户列表</a>
+                            </li>
+                            <li>
+                                <a {% if menu == 'role_list' %} class="active-menu" {% endif %} href="{{url_for('auth.list_role')}}">角色列表</a>
+                            </li>
+                            <li>
+                                <a {% if menu == 'permission_list' %} class="active-menu" {% endif %} href="{{url_for('auth.list_permission')}}">权限列表</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        {% block content %}
+        {% endblock %}
+        <footer style="text-align:center;color:white"><p>Copyright@2017, Shanghai Putao Technology Co., Ltd. All Rights Reserved. 葡萄科技</p></footer>
+    </div>
+    <!-- /. WRAPPER  -->
+    <script src="{{ url_for('static',filename='js/jquery.min.js') }}"></script>
+    <!-- Bootstrap Js -->
+    <script src="{{ url_for('static',filename='js/bootstrap.min.js') }}"></script>
+    <!-- Metis Menu Js -->
+    <script src="{{ url_for('static',filename='js/jquery.metisMenu.js') }}"></script>
+    <!-- Custom Js -->
+    <script src="{{ url_for('static',filename='js/sweet-alert.min.js') }}"></script>
+    <!-- Vue Js -->
+    <script src="{{ url_for('static',filename='js/vue.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/WdatePicker.js') }}"></script>
+    <script>
+        Vue.config.delimiters = ['${', '}']
+        Vue.config.unsafeDelimiters = ['{!!', '!!}']
+        data2 = {
+           new_password:'',
+           new_password2:'',
+           errMsg:''
+        },
+        new Vue({
+            el: '#navbar_user',
+            data: data2,
+            methods: {
+                show_password_modal: function(){
+                    $('.modify-password-modal').modal('show');
+                },
+                modify_password: function(){
+                    new_password = this.new_password;
+                    new_password2 = this.new_password2;
+                    modify_password(new_password,new_password2);
+                }
+            }
+        })
+
+        function modify_password(new_password,new_password2){
+            if(!new_password){
+                data2.errMsg = '新密码不能为空！';
+                return;
+            }
+            if(!new_password2){
+                data2.errMsg = '确认新密码不能为空！';
+                return;
+            }
+            if(new_password != new_password2){
+                data2.errMsg = '两次密码不一致！';
+                return;
+            }
+            $.ajax({
+                url:"{{url_for('auth.list_user')}}",
+                data:{'user_id':"{{current_user.id}}",'new_password':new_password},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                         swal({
+                            "title": "修改成功",
+                            "text": "请重新登陆！",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.href="/login"
+                            }, 50);
+                         })
+                    } else {
+                        swal("修改失败","很遗憾！","error");
+                    }
+                }
+            })
+        }
+    </script>
+    {% block bottom_js %}
+    {% endblock %}
+</body>
+</html>

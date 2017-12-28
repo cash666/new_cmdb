@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+{% import "page.html" as page %}
+{% block content %}
+    <div id="page-wrapper" class="list">
+        <div id="page-inner">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4 class="page-header">
+                       <i class="fa fa-home"></i> 资产管理 > 资产组
+                    </h4>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            资产组列表
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-asset-group-modal" data-toggle="modal">添加资产组</button>
+                            <div class="modal fade add-asset-group-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">添加资产组</h4>
+                                        </div>
+                                        <div class="modal-body">
+                                            <form class="form-horizontal">
+                                                <div class="form-group">
+                                                    <label for="inputGroupName" class="col-sm-3 control-label">资产组名称</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" class="form-control" id="inputGroupName" placeholder="资产组名称" v-model="name">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">选择主机</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" class="form-control" placeholder="过滤" style="margin-bottom:3px" v-model="filter" onchange="filter_asset()">
+                                                        <select class="form-control" v-model="assets" multiple>
+                                                            <option v-for="line in asset_list" value="${line.asset_name}" v-text="line.asset_name"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label for="inputComment" class="col-sm-3 control-label">备注</label>
+                                                    <div class="col-sm-9">
+                                                        <textarea cols="55" rows="3" v-model="comment" id="inputComment" class="form-control"></textarea>
+                                                    </div>
+                                                </div>
+                                            </form>
+                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                            <button type="button" class="btn btn-primary"  @click="add_group()">提交</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <form method="post" action="{{url_for('asset.asset_group_list')}}">
+                                <div class="col-md-4 pull-right" style="margin-right:-15px;margin-bottom:5px">
+                                    <div class="input-group">
+                                        <input type="text" name="search" class="form-control" placeholder="搜索" v-model="search"/>
+                                        <span class="input-group-btn">
+                                           <input type="submit" onclick="return check_search()" class="btn btn-info btn-search" value="搜索">
+                                        </span>
+                                    </div>
+                                </div>
+                            </form>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>编号</th>
+                                            <th>资产组名称</th>
+                                            <th>主机数量</th>
+                                            <th>备注</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for group in groups %}
+                                        <tr>
+                                            <td>{{group.id}}</td>
+                                            <td>{{group.name}}</td>
+                                            <td><a href="{{url_for('asset.asset_list')}}">{{group.count_assets()}}</a></td>
+                                            <td>{{group.comment}}</td>
+                                            <td><span class="label label-success" @click="modify_group('{{group.id}}','{{group.name}}','{{group.comment}}',$event)">修改</span><span class="label label-danger" style="margin-left:10px" @click="delete_group('{{group.id}}')">删除</span></td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {% if pagination %}
+                                <div class="pagination" style="float:right">
+                                    {{ page.pagination_widget(pagination,"asset.asset_group_list") }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block bottom_js %}
+    <script>
+        window.onload = function(){
+            $('#asset_manage').collapse('show');
+            load_asset_list();
+        };
+        data = {
+            search:'',
+            name:'',
+            comment:'',
+            asset_list:[],
+            asset_list2:[],
+            assets:'',
+            filter:'',
+            errMsg:'',
+        }
+        function check_search(){
+            if($.trim(data.search).length == 0){
+                return false;
+            }
+        }
+        new Vue({
+            el: '.list',
+            data: data,
+            methods: {
+                add_group: function(){
+                    name = this.name;
+                    assets = this.assets;
+                    comment = this.comment;
+                    add_group(name,assets,comment);
+                },
+                modify_group: function(group_id,name,comment,e){
+                    tag = e.target;
+                    modify_group(group_id,name,comment,tag);
+                },
+                delete_group: function(group_id){
+                    delete_group(group_id);
+                },
+            }
+        })
+        function filter_asset(){
+            if($.trim(data.filter).length != 0){
+                var reg = new RegExp(data.filter);
+                var filter_asset_list = [];
+                $.each(data.asset_list,function(i,asset){
+                    if(reg.test(asset.asset_name)){
+                       filter_asset_list.push({
+                            'asset_name':asset.asset_name
+                       })
+                    }
+                })
+                data.asset_list = filter_asset_list;
+            } else {
+                data.asset_list = data.asset_list2;
+            }
+        }
+        function delete_group(group_id){
+            $.ajax({
+                url:"{{url_for('asset.asset_group_list')}}",
+                data:{'group_id':group_id},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        window.location.reload();
+                    } else {
+                        swal( "删除失败",'',"error");
+                    }
+                }
+            })
+        }
+        function add_group(name,assets,comment){
+            if($.trim(name).length == 0){
+                data.errMsg = '资产组名称不能为空！';
+                return false;
+            }
+            commit_data = {
+                "name": $.trim(name),
+                "assets": assets,
+                "comment": $.trim(comment),
+            }
+            $.ajax({
+                url:"{{url_for('asset.asset_group_list')}}",
+                data:{'data':JSON.stringify(commit_data)},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "添加成功",
+                            "text": "",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        swal( "添加失败",'',"error");
+                    }
+                }
+            })
+        }
+        function modify_group(group_id,name,comment,tag){
+            td1 = $(tag).parent().parent().find('td').eq(1);
+            td2 = $(tag).parent().parent().find('td').eq(3);
+            if( td1.hasClass('modify') && td2.hasClass('modify')){
+                var new_name = td1.find('input').eq(0).val();
+                var new_comment = td2.find('input').eq(0).val();
+                if($.trim(new_name) == name && comment == $.trim(new_comment)){
+                    return;
+                }
+                if($.trim(new_name) != name || comment != $.trim(new_comment)){
+                    $.ajax({
+                        url:"{{url_for('asset.asset_group_list')}}",
+                        data:{'group_id':group_id,'name':$.trim(new_name),'comment':$.trim(new_comment)},
+                        timeout:10000,
+                        type:'post',
+                        success:function(response){
+                            if(response.result == 1){
+                                window.location.reload();
+                            } else {
+                                swal( "修改失败",'',"error");
+                            }
+                        }
+                    })
+                }
+            } else {
+                td1.addClass('modify');
+                td2.addClass('modify')
+                td1.html("<input type='text' name='name' value="+name+">");
+                td2.html("<input type='text' name='comment' value="+comment+">");
+            }
+        }
+        function load_asset_list(){
+            $.ajax({
+                url:"{{url_for('asset.asset_list')}}",
+                data:{'type':'load_asset_list'},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    data.asset_list = response;
+                    data.asset_list2 = response;
+                }
+            })
+        }
+    </script>
+{% endblock %}

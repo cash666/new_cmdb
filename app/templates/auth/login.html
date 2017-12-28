@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!-- saved from url=(0038)http://v3.bootcss.com/examples/signin/ -->
+<html lang="zh-CN">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="shortcut icon" href="{{ url_for('static',filename='image/favicon.ico') }}" type="image/x-icon">
+        <title>葡萄科技CMDB系统</title>
+        <!-- Bootstrap core CSS -->
+        <link href="{{ url_for('static', filename = 'css/bootstrap.css') }}" rel="stylesheet">
+        <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+        <!--<link href="{{ url_for('static', filename = 'css/ie10-viewport-bug-workaround.css') }}" rel="stylesheet">-->
+        <!-- Custom styles for this template -->
+        <link href="{{ url_for('static', filename = 'css/signin.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename = 'css/sweet-alert.css') }}" rel="stylesheet">
+        <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    </head>
+
+    <body>
+        <div class="container" id="list">
+            <form class="form-signin" method="post">
+                <h3 class="form-signin-heading">CMDB系统</h3>
+                <label for="inputUsername" class="sr-only">Username</label>
+                <input type="text" id="inputUsername" class="form-control" placeholder="Username" v-model.trim="username">
+                <label for="inputPassword" class="sr-only">Password</label>
+                <input type="password" id="inputPassword" class="form-control" placeholder="Password" v-model.trim="password">
+                <div class="checkbox">
+                  <label>
+                    <input type="checkbox" value="remember-me" v-model="remember_me"> Remember me
+                  </label>
+                </div>
+                <button class="btn btn-lg btn-primary btn-block" type="button" @click="submit()">login</button>
+                <label class="text-danger" v-if="errMsg" v-text="errMsg"></label>
+            </form>
+        </div> <!-- /container -->
+            <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+
+    </body>
+    <!--<script src="{{ url_for('static', filename = 'js/ie-emulation-modes-warning.js') }}"></script>-->
+    <!--<script src="{{ url_for('static', filename = 'js/ie10-viewport-bug-workaround.js') }}"></script>-->
+    <script type="text/javascript" src="{{ url_for('static', filename = 'js/vue.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename = 'js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename = 'js/sweet-alert.min.js') }}"></script>
+    <script>
+        data = {
+            'username':'',
+            'password':'',
+            'remember_me':'',
+            'errMsg':'',
+        }
+        new Vue({
+            el: '#list',
+            data: data,
+            methods: {
+                submit: function(){
+                    username = this.username;
+                    password = this.password;
+                    remember_me = this.remember_me;
+                    submit(username,password,remember_me);
+                }
+            }
+        })
+        function submit(username,password,remember_me){
+            if(!username){
+                data.errMsg = '用户名不能为空';
+                return;
+            }
+            if(!password){
+                data.errMsg = '密码不能为空';
+                return;
+            }
+            $.ajax({
+                url:"{{url_for('auth.login')}}",
+                data:{'username':username,'password':password,'remember_me':remember_me},
+                timeout:10000,
+                type:'post',
+                success:function(response){
+                    console.log(response);
+                    if(response.result == -1){
+                        swal({
+                            "title": "登陆失败",
+                            "text": response.errMsg,
+                            "type": "error"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                                }, 50);
+                            }
+                        )
+                    } else {
+                        if(response.next){
+                            window.location.href = response.next
+                        } else {
+                            window.location.href = '/index'
+                        }
+                    }
+                }
+            })
+        }
+    </script>
+</html>
