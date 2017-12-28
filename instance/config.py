@@ -25,9 +25,9 @@ MAIL_SERVER = 'smtp.qq.com'
 MAIL_PORT = 465
 MAIL_USE_TLS = False
 MAIL_USE_SSL = True
-MAIL_USERNAME = '1032544530@qq.com'
-MAIL_PASSWORD = 'sbujjdppnbrubdjc'
-FROM_EMAIL = '1032544530@qq.com'
+MAIL_USERNAME = 'xxxx@qq.com'
+MAIL_PASSWORD = 'xxxx'
+FROM_EMAIL = 'xxxx@qq.com'
 
 #分页
 PER_PAGE = 10
