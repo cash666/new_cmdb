@@ -32,3 +32,6 @@ app.register_blueprint(task_blueprint)
 
 from .asset import asset as asset_blueprint
 app.register_blueprint(asset_blueprint)
+
+from .docker import docker as docker_blueprint
+app.register_blueprint(docker_blueprint)

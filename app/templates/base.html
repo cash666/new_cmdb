@@ -7,7 +7,7 @@
     <!-- Bootstrap Styles-->
     <link href="{{ url_for('static',filename='css/bootstrap.css') }}" rel="stylesheet" />
     <!-- FontAwesome Styles-->
-    <link href="{{ url_for('static',filename='css/font-awesome.css') }}" rel="stylesheet" />
+    <link href="{{ url_for('static',filename='css/font-awesome.min.css') }}" rel="stylesheet" />
     <!-- Custom Styles-->
     <link href="{{ url_for('static',filename='css/custom-styles.css') }}" rel="stylesheet" />
     <link href="{{ url_for('static',filename='css/style.css') }}" rel="stylesheet" />
@@ -85,7 +85,7 @@
                         <a href="{{url_for('main.index')}}"><i class="fa fa-dashboard"></i>控制台</a>
                     </li>
                     <li>
-                        <a style="color:#999;" data-toggle="collapse" data-target="#asset_manage" aria-expanded="false" aria-controls="asset_manage"><i class="fa fa-list"></i>资产管理<span class="fa arrow"></span></a>
+                        <a style="color:#999;" data-toggle="collapse" data-target="#asset_manage" aria-expanded="false" aria-controls="asset_manage"><i class="fa fa-server fa-fw"></i>资产管理<span class="fa arrow"></span></a>
                         <ul class="nav nav-second-level collapse" id="asset_manage">
                             <li>
                                 <a {% if menu == 'idc_list' %} class="active-menu" {% endif %} href="{{url_for('asset.idc_list')}}">机房列表</a>
@@ -95,6 +95,20 @@
                             </li>
                             <li>
                                 <a {% if menu == 'asset_list' %} class="active-menu" {% endif %} href="{{url_for('asset.asset_list')}}">资产列表</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li>
+                        <a style="color:#999;" data-toggle="collapse" data-target="#docker_manage" aria-expanded="false" aria-controls="docker_manage"><i class="fa fa-file-text"></i>Docker管理<span class="fa arrow"></span></a>
+                        <ul class="nav nav-second-level collapse" id="docker_manage">
+                            <li>
+                                <a {% if menu == 'dockerfile_list' %} class="active-menu" {% endif %} href="{{url_for('docker.dockerfile_list')}}">Dockerfile管理</a>
+                            </li>
+                            <li>
+                                <a href="#">Docker镜像管理</a>
+                            </li>
+                            <li>
+                                <a href="#">Docker容器管理</a>
                             </li>
                         </ul>
                     </li>
@@ -116,7 +130,7 @@
                         </ul>
                     </li>
                     <li>
-                        <a style="color:#999;" data-toggle="collapse" data-target="#user_manage" aria-expanded="false" aria-controls="user_manage"><i class="fa fa-users"></i>用户管理<span class="fa arrow"></span></a>
+                        <a style="color:#999;" data-toggle="collapse" data-target="#user_manage" aria-expanded="false" aria-controls="user_manage"><i class="fa fa-user-circle"></i>用户管理<span class="fa arrow"></span></a>
                         <ul class="nav nav-second-level collapse" id="user_manage">
                             <li>
                                 <a {% if menu == 'user_list' %} class="active-menu" {% endif %} href="{{url_for('auth.list_user')}}">用户列表</a>
