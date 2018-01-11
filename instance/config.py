@@ -40,3 +40,6 @@ ALLOWED_EXTENSIONS = set(['txt','png','jpg','xls','JPG','PNG','xlsx','gif','GIF'
 STATUS_LIST = [u'线上',u'空闲',u'下架',u'报废']
 ONLINE_LIST = [u'运行中',u'已停止']
 
+#Dockerfile路径
+DOCKERFILE_PATH = "/home/cash/cash"
+DOCKER_REGISTRY = "10.1.11.180:5000"
