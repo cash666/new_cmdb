@@ -12,7 +12,7 @@
     <link href="{{ url_for('static',filename='css/custom-styles.css') }}" rel="stylesheet" />
     <link href="{{ url_for('static',filename='css/style.css') }}" rel="stylesheet" />
     <link href="{{ url_for('static',filename='css/sweet-alert.css') }}" rel="stylesheet" />
-    <!--<link href="{{ url_for('static',filename='css/laydate.css') }}" rel="stylesheet" />-->
+    <link href="{{ url_for('static',filename='css/ladda-themeless.min.css') }}" rel="stylesheet" />
     <link rel="shortcut icon" href="{{ url_for('static',filename='image/favicon.ico') }}" type="image/x-icon">
     <!-- Google Fonts-->
     <!--<link href='http://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css' />-->
@@ -105,10 +105,10 @@
                                 <a {% if menu == 'dockerfile_list' %} class="active-menu" {% endif %} href="{{url_for('docker.dockerfile_list')}}">Dockerfile管理</a>
                             </li>
                             <li>
-                                <a href="#">Docker镜像管理</a>
+                                <a {% if menu == 'dockerimage_list' %} class="active-menu" {% endif %} href="{{url_for('docker.dockerimage_list')}}">Docker镜像管理</a>
                             </li>
                             <li>
-                                <a href="#">Docker容器管理</a>
+                                <a {% if menu == 'dockercontainer_list' %} class="active-menu" {% endif %} href="{{url_for('docker.dockercontainer_list')}}">Docker容器管理</a>
                             </li>
                         </ul>
                     </li>
@@ -161,6 +161,8 @@
     <!-- Vue Js -->
     <script src="{{ url_for('static',filename='js/vue.js') }}"></script>
     <script src="{{ url_for('static',filename='js/WdatePicker.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/spin.min.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/ladda.min.js') }}"></script>
     <script>
         Vue.config.delimiters = ['${', '}']
         Vue.config.unsafeDelimiters = ['{!!', '!!}']

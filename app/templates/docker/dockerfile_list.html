@@ -6,7 +6,7 @@
             <div class="row">
                 <div class="col-md-12">
                     <h4 class="page-header">
-                       <i class="fa fa-home"></i> Docker管理 > Dockerfile列表
+                       <i class="fa fa-home"></i> Docker管理 > Dockerfile管理
                     </h4>
                 </div>
             </div>
@@ -15,47 +15,53 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             Dockerfile列表
-                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-dockerfile-modal" data-toggle="modal">添加Dockerfile</button>
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-dockerfile-modal" data-toggle="modal">创建Dockerfile</button>
                             <div class="modal fade add-dockerfile-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
                                             <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                                            <h4 class="modal-title" id="myModalLabel">添加Dockerfile</h4>
+                                            <h4 class="modal-title" id="myModalLabel">创建Dockerfile</h4>
                                         </div>
-                                        <div class="modal-body">
-                                            <form class="form-horizontal">
+                                        <form class="form-horizontal" id="create_docker_form" enctype="multipart/form-data">
+                                            <div class="modal-body">
                                                 <div class="form-group">
                                                     <label for="inputName" class="col-sm-3 control-label">Dockerfile名称</label>
                                                     <div class="col-sm-9">
-                                                        <input type="text" class="form-control" id="inputName" placeholder="Dockerfile名称" v-model="name">
+                                                        <input type="text" class="form-control" id="inputName" placeholder="Dockerfile名称" v-model="name" name="name">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="inputPath" class="col-sm-3 control-label">Dockerfile路径</label>
                                                     <div class="col-sm-9">
-                                                        <input type="text" class="form-control" id="inputPath" placeholder="Dockerfile路径" v-model="path">
+                                                        <input type="text" class="form-control" id="inputPath" placeholder="Dockerfile路径" v-model="path" name="path">
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="inputContent" class="col-sm-3 control-label">Dockerfile内容</label>
                                                     <div class="col-sm-9">
-                                                        <textarea cols="55" rows="30" v-model="content" id="inputContent" class="form-control"></textarea>
+                                                        <textarea cols="55" rows="30" v-model="content" id="inputContent" class="form-control" name="content"></textarea>
                                                     </div>
                                                 </div>
                                                 <div class="form-group">
                                                     <label for="inputDes" class="col-sm-3 control-label">备注</label>
                                                     <div class="col-sm-9">
-                                                        <textarea cols="55" rows="3" v-model="des" id="inputDes" class="form-control"></textarea>
+                                                        <textarea cols="55" rows="3" v-model="des" id="inputDes" class="form-control" name="des"></textarea>
                                                     </div>
                                                 </div>
-                                            </form>
-                                            <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                                            <button type="button" class="btn btn-primary" @click="create_dockerfile()">创建Dockerfile</button>
-                                        </div>
+                                                <div class="form-group">
+                                                    <label for="InputFile" class="col-sm-3 control-label">上传文件</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="file" id="InputFile" name="file">
+                                                    </div>
+                                                </div>
+                                                <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                                <button type="button" class="btn btn-primary" onclick="create_docker_file()">创建</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
                             </div>
@@ -93,7 +99,7 @@
                                             <td>{{dockerfile.path}}</td>
                                             <td>{{dockerfile.creater}}</td>
                                             <td>{{dockerfile.create_time}}</td>
-                                            <td><span class="label label-info" @click="show_dockerfile_content('{{dockerfile.id}}','{{dockerfile.path}}')" data-toggle="modal">查看</span><span class="label label-success" style="margin-left:5px">生成镜像</span></td>
+                                            <td><span class="label label-info" @click="show_dockerfile_content('{{dockerfile.id}}','{{dockerfile.path}}')" data-toggle="modal">查看</span><span class="label label-success" style="margin-left:5px" @click="show_create_image_modal('{{dockerfile.id}}')" data-toggle="modal">生成镜像</span></td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -127,22 +133,57 @@
                     </div>
                 </div>
             </div>
+            <div class="modal fade create-image-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel3" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel3">生成镜像</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="form-horizontal">
+                                <div class="form-group">
+                                    <label for="inputImageName" class="col-sm-3 control-label">镜像名称</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" id="inputImageName" placeholder="镜像名称" v-model="image_name">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="inputTag" class="col-sm-3 control-label">镜像标签</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" id="inputTag" placeholder="镜像标签" v-model="tag" name="path">
+                                    </div>
+                                </div>
+                            </form>
+                            <div style="color:green;text-align:center" v-if="tip" v-text="tip"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                            <button type="button" class="btn btn-primary ladda-button" id="image" @click="create_image()"><span class="ladda-label">生成镜像</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}
 {% block bottom_js %}
+    <script src="{{ url_for('static',filename='js/jquery.form.min.js') }}"></script>
     <script>
         window.onload = function(){
             $('#docker_manage').collapse('show');
         };
         data = {
             search:'',
+            id:'',
             name:'',
             path:'',
             content:'',
+            tag:'',
             show_content:'',
             des:'',
-            errMsg:'',
+            image_name:'',
+            tip:'',
         }
         function check_search(){
             if($.trim(data.search).length == 0){
@@ -156,15 +197,55 @@
                 show_dockerfile_content: function(id,path){
                     show_dockerfile_content(id,path);
                 },
-                create_dockerfile: function(){
-                    name = $.trim(this.name);
-                    path = $.trim(this.path);
-                    des = $.trim(this.des);
-                    content = $.trim(this.content);
-                    create_dockerfile(name,path,des,content)
+                show_create_image_modal: function(id){
+                    $('.create-image-modal').modal('show');
+                    this.id = id;
+                },
+                create_image: function(){
+                    id = this.id;
+                    image_name = $.trim(this.image_name);
+                    tag = $.trim(this.tag);
+                    create_image(id,image_name,tag)
                 }
             }
         })
+        function create_image(id,image_name,tag){
+            var l = Ladda.create(document.querySelector("#image"));
+            if(image_name.length == 0){
+                data.errMsg = '镜像名称不能为空！';
+                return;
+            }
+            l.start();
+            $('#image').text('创建中，请稍等.....');
+            data.tip = "友情提示:因创建时间过长，可以先等待一小会，看是否有错误爆出，如没有则可以先提前关闭弹框，镜像会在后台生成。"
+            $.ajax({
+                url:"{{url_for('docker.dockerfile_list')}}",
+                data:{'id':id,'image_name':image_name,'tag':tag},
+                timeout:5000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        l.stop();
+                        $('#image').text('生成镜像');
+                        swal({
+                            "title": "成功",
+                            "text": "创建镜像成功！",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                        })
+                    } else {
+                        l.stop();
+                        $('#image').text('生成镜像');
+                        swal("错误",response.errMsg,"error");
+                    }
+                    data.image_name = '';
+                    data.tip = '';
+                }
+            })
+        }
         function show_dockerfile_content(id,path){
             $.ajax({
                 url:"{{url_for('docker.dockerfile_list')}}",
@@ -181,27 +262,27 @@
                 }
             })
         }
-        function create_dockerfile(name,path,des,content){
+        function create_docker_file(){
             var reg = /^[a-zA-Z0-9]{1}[a-zA-Z0-9_-]{2,32}$/;
-            if(name.length == 0){
+            if(data.name.length == 0){
                 data.errMsg = 'Dockerfile名称不能为空！';
                 return;
             }
-            if(path.length == 0){
+            if(data.path.length == 0){
                 data.errMsg = 'Dockerfile路径不能为空！'
                 return;
             }
-            if(!reg.test(path)){
+            if(!reg.test(data.path)){
                 data.errMsg = 'Dockerfile路径不合法！'
                 return;
             }
-            if(content.length == 0){
+            if(data.content.length == 0){
                 data.errMsg = 'Dockerfile内容不能为空！'
                 return;
             }
-            $.ajax({
+            var options = {
                 url:"{{url_for('docker.dockerfile_list')}}",
-                data:{'name':name,'path':path,'des':des,'content':content},
+                resetForm:true,
                 timeout:10000,
                 type:'post',
                 success:function(response){
@@ -211,7 +292,8 @@
                         swal( "创建Dockerfile失败",response.errMsg,"error");
                     }
                 }
-            })
+            }
+            $('#create_docker_form').ajaxSubmit(options);
         }
     </script>
 {% endblock %}

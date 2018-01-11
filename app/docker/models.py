@@ -14,6 +14,7 @@ class DockerFile(db.Model):
     name = db.Column(db.String(32),unique = True)
     path = db.Column(db.String(32),unique = True)
     content = db.Column(db.Text)
+    attachment = db.Column(db.String(64))
     description = db.Column(db.Text)
     creater = db.Column(db.String(16))
     images = db.relationship('DockerImage', backref='dockerfile', lazy='dynamic')

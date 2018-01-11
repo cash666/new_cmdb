@@ -455,7 +455,7 @@ def task_list():
             "log_special_position": task.log_special_position if task.log_special_position else '-',
             "is_log_cut": task.is_log_cut,
             "log_clear": task.log_clear if task.log_clear else '-',
-            "attachment": attachment if task.attachment else '-',
+            "attachment": task.attachment if task.attachment else '-',
             "comment": task.comment if task.comment else '-',
             "is_front_cdn": task.project.is_front_cdn,
             "is_back_cdn": task.project.is_back_cdn,
