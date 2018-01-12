@@ -365,6 +365,10 @@
                 timeout:5000,
                 type:'post',
                 success:function(response){
+                    data.container_log_list = '';
+                    data.container_process_list = '';
+                    data.container_log_errMsg = '';
+                    data.container_process_errMsg = '';
                     if(response.result == -1){
                         data.container_log_errMsg = response.errMsg;
                         data.container_process_errMsg = response.errMsg;
