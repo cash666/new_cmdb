@@ -18,6 +18,52 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             Docker镜像列表
+                            <button type="button" class="btn btn-primary btn-sm" style="float:right;margin-top:-5px" data-target=".add-dockerimage-modal" data-toggle="modal">添加Docker镜像</button>
+                            <div class="modal fade add-dockerimage-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                            <h4 class="modal-title" id="myModalLabel">添加Docker镜像</h4>
+                                        </div>
+                                        <form class="form-horizontal">
+                                            <div class="modal-body">
+                                                <div class="form-group">
+                                                    <label for="inputImageName" class="col-sm-3 control-label">Docker镜像名称</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" class="form-control" id="inputImageName" placeholder="Docker镜像名称" v-model="image_name">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label" for="inputImageTag">Docker镜像标签</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" class="form-control" id="inputImageTag" placeholder="Docker镜像标签" v-model="image_tag">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label" for="inputImageID">Docker镜像ID</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" class="form-control" id="inputImageID" placeholder="Docker镜像ID" v-model="image_id">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">Dockerfile选择</label>
+                                                    <div class="col-sm-9">
+                                                        <select class="form-control" v-model="docker_file">
+                                                            <option v-for="line in dockerfile_list" value="${line.id}" v-text="line.name"></option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                                <button type="button" class="btn btn-primary" @click="add_image()">添加</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="panel-body">
                             <form method="post" action="{{url_for('docker.dockerimage_list')}}">
@@ -76,10 +122,17 @@
     <script>
         window.onload = function(){
             $('#docker_manage').collapse('show');
+            load_dockerfile_list();
         };
         data = {
             search:'',
             images:'',
+            image_name:'',
+            image_tag:'',
+            image_id:'',
+            docker_file:'',
+            dockerfile_list:'',
+            errMsg:'',
         }
         function check_search(){
             if($.trim(data.search).length == 0){
@@ -92,9 +145,53 @@
             methods: {
                 delete_image: function(image_id){
                     delete_image(image_id);
+                },
+                add_image: function(){
+                    image_name = $.trim(this.image_name);
+                    image_tag = $.trim(this.image_tag);
+                    image_id = $.trim(this.image_id);
+                    docker_file = $.trim(this.docker_file);
+                    add_image(image_name,image_tag,image_id,docker_file);
                 }
             }
         })
+        function add_image(image_name,image_tag,image_id,docker_file){
+            if(image_name.length == 0){
+                data.errMsg = 'Docker镜像名不能为空！';
+                return;
+            }
+            if(image_id.length == 0){
+                data.errMsg = 'Docker镜像ID不能为空！';
+                return;
+            }
+            commit_data = {
+                'image_name':image_name,
+                'image_tag':image_tag,
+                "image_id":image_id,
+                "docker_file":docker_file
+            }
+            $.ajax({
+                url:"{{url_for('docker.dockerimage_list')}}",
+                data:{'data':JSON.stringify(commit_data)},
+                timeout:5000,
+                type:'post',
+                success:function(response){
+                    if(response.result == 1){
+                        swal({
+                            "title": "成功",
+                            "text": "添加成功！",
+                            "type": "success"
+                            }, function () {
+                                setTimeout(function () {
+                                    window.location.reload();
+                            }, 50);
+                        })
+                    } else {
+                        swal("添加失败","","error");
+                    }
+                }
+            })
+        }
         function delete_image(image_id){
             $.ajax({
                 url:"{{url_for('docker.dockerimage_list')}}",
@@ -116,8 +213,18 @@
                         swal("失败",response.errMsg,"error");
                     }
                 }
-            })    
-
+            })
+        }
+        function load_dockerfile_list(){
+            $.ajax({
+                url:"{{url_for('docker.dockerfile_list')}}",
+                data:{'type':'load_dockerfile_list'},
+                timeout:5000,
+                type:'post',
+                success:function(response){
+                    data.dockerfile_list = response;
+                }
+            })
         }
     </script>
 {% endblock %}

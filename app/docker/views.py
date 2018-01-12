@@ -35,6 +35,16 @@ def dockerfile_list():
     content = request.form.get('content','')
     file = request.files.get('file','')
     search = request.form.get('search','')
+    type = request.form.get('type','')
+    if type == 'load_dockerfile_list':
+        dockerfile_list = []
+        docker_files = DockerFile.query.all()
+        for f in docker_files:
+            dockerfile_list.append({
+                'id': f.id,
+                'name': f.name,
+            })
+        return jsonify(dockerfile_list)
     if name and path and content:
         name_exists = DockerFile.query.filter_by(name=name).first()
         path_exists = DockerFile.query.filter_by(path=path).first()
@@ -156,6 +166,7 @@ def dockerimage_list():
     pagination = DockerImage.query.filter(or_(DockerImage.image_name.like("%"+search+"%"),DockerImage.image_id.like("%"+search+"%"),DockerImage.creater.like("%"+search+"%"))).paginate(page, per_page=current_app.config['PER_PAGE'], error_out=False)
     dockerimages = pagination.items
     type = request.form.get('type','')
+    data = request.form.get('data', '')
     if type == 'load_image_list':
         image_list = []
         images = DockerImage.query.all()
@@ -165,7 +176,7 @@ def dockerimage_list():
                 'image_name':image.image_name,
             })
         return jsonify(image_list)
-    if id:
+    elif id:
         image = DockerImage.query.get(id)
         image_name = image.image_name
         db.session.delete(image)
@@ -181,6 +192,22 @@ def dockerimage_list():
             return jsonify({
                 'result':1
             })
+    elif data:
+        json_data = json.loads(data)
+        image_name = json_data.get('image_name','')
+        image_tag = json_data.get('image_tag','')
+        image_id = json_data.get('image_id','')
+        docker_file = json_data.get('docker_file','')
+        image = DockerImage()
+        image.image_name = image_name
+        image.tag_name = image_tag if image_tag else 'latest'
+        image.image_id = image_id
+        image.creater = session.get('username')
+        image.dockerfile_id = docker_file
+        db.session.add(image)
+        return jsonify({
+            'result':1
+        })
     return render_template('docker/dockerimage_list.html', dockerimages=dockerimages, menu='dockerimage_list',pagination=pagination)
 
 @docker.route('/docker/container/list/',methods = ['GET','POST'])
