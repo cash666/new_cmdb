@@ -309,7 +309,6 @@ def dockercontainer_list():
     if container_id and is_delete_volume and is_delete_link:
         c = DockerClient.client()
         container = c.containers.get(container_id)
-        print 11111,container.id
         if is_delete_volume == '0':
             volume = False
         else:
@@ -330,4 +329,21 @@ def dockercontainer_list():
             dc = DockerContainer.query.filter_by(container_id = container_id).first()
             db.session.delete(dc)
             return jsonify({'result': 1})
+    if container_id and type == 'show_container_info':
+        c = DockerClient.client()
+        container = c.containers.get(container_id)
+        try:
+            logs = container.logs(timestamps = True)
+            processes = container.top(ps_args = 'aux')
+        except Exception,e:
+            return jsonify({
+                'result':-1,
+                'errMsg':str(e)
+            })
+        else:
+            info_dict = {}
+            log_list = logs.split('\n')
+            info_dict['log'] = log_list
+            info_dict['process'] = processes
+            return jsonify(info_dict)
     return render_template('docker/dockercontainer_list.html', dockercontainers=dockercontainers, menu='dockercontainer_list',pagination=pagination,online_list = current_app.config['ONLINE_LIST'],is_online = is_online,keyword = keyword)

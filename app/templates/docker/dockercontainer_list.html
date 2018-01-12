@@ -121,7 +121,7 @@
                                         {% for container in dockercontainers %}
                                         <tr>
                                             <td>{{container.id}}</td>
-                                            <td>{{container.container_name}}</td>
+                                            <td><a @click="show_container_info_modal('{{container.container_id}}')">{{container.container_name}}</a></td>
                                             <td>{{container.container_id}}</td>
                                             <td v-if="'{{container.status}}'"><span class="label label-success">运行中</span></td>
                                             <td v-else><span class="label label-danger">已停止</span></td>
@@ -230,6 +230,50 @@
                     </div>
                 </div>
             </div>
+            <div class="modal fade show-container-info-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel5" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <h4 class="modal-title" id="myModalLabel5">查看容器日志和进程信息</h4>
+                        </div>
+                        <div class="modal-body">
+                           <div class="panel-body">
+                                <ul class="nav nav-tabs">
+                                    <li class="active"><a href="#log" data-toggle="tab">查看日志</a>
+                                    </li>
+                                    <li class=""><a href="#process" data-toggle="tab">查看进程</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div class="tab-pane fade active in" id="log">
+                                        <div v-if="container_log_errMsg" v-text="container_log_errMsg"></div>
+                                        <div v-else>
+                                            <div v-if="container_log_list.length <= 1">
+                                                <div v-for="log in container_log_list" v-text="log"></div>
+                                            </div>
+                                            <div v-else>
+                                                暂无日志信息....
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane fade" id="process">
+                                        <div v-if="container_process_errMsg" v-text="container_process_errMsg"></div>
+                                        <div v-else>
+                                            <div v-if="container_process_list.length <= 1">
+                                                <div v-for="process in container_process_list" v-text="process"></div>
+                                            </div>
+                                            <div v-else>
+                                                暂无进程信息....
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}
@@ -261,6 +305,10 @@
             container_status:'',
             is_delete_volume:'0',
             is_delete_link:'0',
+            container_log_list:'',
+            container_process_list:'',
+            container_log_errMsg:'',
+            container_process_errMsg:'',
         }
         function check_search(){
             if($.trim(data.search).length == 0){
@@ -310,9 +358,30 @@
                 },
                 delete_container: function(){
                     delete_container(this.container_id3,this.is_delete_volume,this.is_delete_link);
+                },
+                show_container_info_modal: function(container_id){
+                    $('.show-container-info-modal').modal('show');
+                    show_container_info(container_id);
                 }
             }
         })
+        function show_container_info(container_id){
+             $.ajax({
+                url:"{{url_for('docker.dockercontainer_list')}}",
+                data:{'type':'show_container_info','container_id':container_id},
+                timeout:5000,
+                type:'post',
+                success:function(response){
+                    if(response.result == -1){
+                        data.container_log_errMsg = response.errMsg;
+                        data.container_process_errMsg = response.errMsg;
+                    } else {
+                        data.container_log_list = response.log;
+                        data.container_process_list = response.process;
+                    }
+                }
+            })
+        }
         function create_container(container_name,container_name2,image_name,src_port,dst_port,host_dir,container_dir,model){
             if(container_name.length == 0){
                 data.errMsg = 'Docker容器名称不能为空！';
