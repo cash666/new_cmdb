@@ -68,11 +68,28 @@
                                                         </select>
                                                     </div>
                                                 </div>
+                                                <div class="form-group">
+                                                    <label for="inputCommand" class="col-sm-3 control-label">运行的命令</label>
+                                                    <div class="col-sm-9">
+                                                        <input type="text" class="form-control" id="inputCommand" placeholder="运行的命令" v-model="command">
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="col-sm-3 control-label">是否运行</label>
+                                                    <div class="col-sm-9">
+                                                        <label class="radio-inline" style="margin-left:10px">
+                                                            <input type="radio" name="status" value="1" v-model="status">是
+                                                        </label>
+                                                        <label class="radio-inline">
+                                                            <input type="radio" name="status" value="0" v-model="status">否
+                                                        </label>
+                                                    </div>
+                                                </div>
                                                 <div style="color:red;text-align:center" v-if="errMsg" v-text="errMsg"></div>
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                                                <button type="button" class="btn btn-primary" @click="create_container()">创建Docker容器</button>
+                                                <button type="button" class="btn btn-primary" id="create_container" @click="create_container()">创建</button>
                                             </div>
                                         </form>
                                     </div>
@@ -129,7 +146,7 @@
                                             <td>{{container.image.image_name}}</td>
                                             <td>{{container.creater}}</td>
                                             <td>{{container.create_time}}</td>
-                                            <td><span class="label label-primary" @click="show_create_image_modal('{{container.container_id}}')">创建镜像</span><span v-if="'{{container.status}}' == 'True'" class="label label-warning" style="margin-left:5px" @click="show_stop_container_modal('{{container.container_id}}')">停止</span><span v-else class="label label-success" style="margin-left:5px">启动</span><span v-if="'{{container.status}}' == 'True'" class="label label-success" style="margin-left:5px" @click="restart_container('{{container.container_id}}')">重启</span><span class="label label-danger" style="margin-left:5px" @click="show_delete_container_modal('{{container.container_id}}','{{container.status}}')">删除</span></td>
+                                            <td><span class="label label-primary" @click="show_create_image_modal('{{container.container_id}}')">创建镜像</span><span v-if="'{{container.status}}' == 'True'" class="label label-warning" style="margin-left:5px" @click="show_stop_container_modal('{{container.container_id}}')">停止</span><span v-else class="label label-success" style="margin-left:5px" @click="start_container('{{container.container_id}}')">启动</span><span v-if="'{{container.status}}' == 'True'" class="label label-success" style="margin-left:5px" @click="restart_container('{{container.container_id}}')">重启</span><span class="label label-danger" style="margin-left:5px" @click="show_delete_container_modal('{{container.container_id}}','{{container.status}}')">删除</span></td>
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -160,6 +177,12 @@
                                     </div>
                                 </div>
                                 <div class="form-group">
+                                    <label for="inputTag" class="col-sm-3 control-label">镜像标签</label>
+                                    <div class="col-sm-9">
+                                        <input type="text" class="form-control" id="inputTag" placeholder="镜像标签" v-model="tag">
+                                    </div>
+                                </div>
+                                <div class="form-group">
                                     <label for="inputMessage" class="col-sm-3 control-label">镜像说明</label>
                                     <div class="col-sm-9">
                                         <input type="text" class="form-control" id="inputMessage" placeholder="镜像说明" v-model="message">
@@ -169,7 +192,7 @@
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                                <button type="button" class="btn btn-primary" @click="create_image()">创建</button>
+                                <button type="button" class="btn btn-primary" id="create_image" @click="create_image()">创建</button>
                             </div>
                         </form>
                     </div>
@@ -302,6 +325,9 @@
             container_process_list:'',
             container_log_errMsg:'',
             container_process_errMsg:'',
+            tag:'',
+            command:'',
+            status:'',
         }
         function check_search(){
             if($.trim(data.search).length == 0){
@@ -321,7 +347,9 @@
                     container_dir = $.trim(this.container_dir);
                     model = $.trim(this.model);
                     container_name2 = $.trim(this.container_name2);
-                    create_container(container_name,container_name2,image_name,src_port,dst_port,host_dir,container_dir,model);
+                    command = $.trim(this.command);
+                    status = this.status;
+                    create_container(container_name,container_name2,image_name,src_port,dst_port,host_dir,container_dir,model,command,status);
                 },
                 show_create_image_modal: function(container_id){
                     $('.create-image-modal').modal('show');
@@ -330,8 +358,9 @@
                 create_image: function(){
                     container_id = this.container_id;
                     image_name = $.trim(this.image_name2);
+                    tag = $.trim(this.tag);
                     message = $.trim(this.message);
-                    create_image(container_id,image_name,message);
+                    create_image(container_id,image_name,tag,message);
                 },
                 show_stop_container_modal: function(container_id){
                     $('.stop-container-modal').modal('show');
@@ -340,6 +369,9 @@
                 stop_container: function(force){
                     container_id = this.container_id2;
                     stop_container(container_id,force);
+                },
+                start_container: function(container_id){
+                    start_container(container_id);
                 },
                 restart_container: function(container_id){
                     restart_container(container_id);
@@ -379,13 +411,18 @@
                 }
             })
         }
-        function create_container(container_name,container_name2,image_name,src_port,dst_port,host_dir,container_dir,model){
+        function create_container(container_name,container_name2,image_name,src_port,dst_port,host_dir,container_dir,model,command,status){
+            var l = Ladda.create(document.querySelector("#create_container"));
             if(container_name.length == 0){
                 data.errMsg = 'Docker容器名称不能为空！';
                 return;
             }
             if(image_name.length == 0){
                 data.errMsg = 'Docker镜像不能为空！';
+                return;
+            }
+            if(!status){
+                data.errMsg = '请选择是否启动Docker容器！';
                 return;
             }
             commit_data = {
@@ -397,13 +434,19 @@
                 "host_dir": host_dir,
                 "container_dir": container_dir,
                 "model": model,
+                "command":command,
+                "status": status,
             }
+            l.start();
+            $('#create_container').text('创建中,请稍等....');
             $.ajax({
                 url:"{{url_for('docker.dockercontainer_list')}}",
                 data:{'data':JSON.stringify(commit_data)},
                 timeout:10000,
                 type:'post',
                 success: function(response){
+                    l.stop();
+                    $('#create_container').text('创建');
                     if(response.result == 1){
                         swal({
                             "title": "创建成功",
@@ -481,6 +524,43 @@
                 }
             });
         }
+        function start_container(container_id){
+            swal({
+                title: "确定启动该容器吗？",
+                type: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#DD6B55",
+                confirmButtonText: "确定",
+                closeOnConfirm: false,
+                showLoaderOnConfirm:true
+            },
+            function(isConfirm){
+                if(isConfirm){
+                    $.ajax({
+                        url:"{{url_for('docker.dockercontainer_list')}}",
+                        data:{'container_id':container_id,'type':'start_container'},
+                        timeout:10000,
+                        type:'post',
+                        success: function(response){
+                            if(response.result == 1){
+                                swal({
+                                    "title": "启动成功",
+                                    "text": "",
+                                    "type": "success"
+                                    }, function () {
+                                        setTimeout(function () {
+                                            window.location.reload();
+                                        }, 50);
+                                    }
+                                )
+                            } else {
+                                swal( "启动失败",response.errMsg,"error");
+                            }
+                        }
+                    })
+                }
+            });
+        }
         function restart_container(container_id){
             swal({
                 title: "确定重启该容器吗？",
@@ -517,8 +597,8 @@
                 }
             });
         }
-        function create_image(container_id,image_name,message){
-            console.log(container_id,image_name,message);
+        function create_image(container_id,image_name,tag,message){
+            var l = Ladda.create(document.querySelector("#create_image"));
             if(image_name.length == 0){
                 data.errMsg2 = 'Docker镜像的名称不能为空！';
                 return;
@@ -527,12 +607,16 @@
                 data.errMsg2 = 'Docker镜像说明不能为空！';
                 return;
             };
+            l.start();
+            $("#create_image").text('创建中，请稍等....');
             $.ajax({
                 url:"{{url_for('docker.dockercontainer_list')}}",
-                data:{'container_id':container_id,'image_name':image_name,'message':message},
+                data:{'container_id':container_id,'image_name':image_name,'tag':tag,'message':message},
                 timeout:10000,
                 type:'post',
                 success: function(response){
+                    l.stop();
+                    $("#create_image").text('创建');
                     if(response.result == 1){
                         swal({
                             "title": "创建成功",

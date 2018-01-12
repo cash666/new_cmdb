@@ -225,6 +225,7 @@ def dockercontainer_list():
     is_online = request.args.get('is_online', '')
     is_delete_volume = request.form.get('is_delete_volume','')
     is_delete_link = request.form.get('is_delete_link','')
+    tag = request.form.get('tag', '')
     if is_online:
         if is_online == u'运行中':
             is_online2 = '1'
@@ -254,18 +255,30 @@ def dockercontainer_list():
                 'result': 1
             })
     if container_id and image_name and message:
+        if not tag:
+            tag = 'latest'
         try:
             c = DockerClient.client()
             container = c.containers.get(container_id)
-            container.commit(image_name,author = session.get('username'),message = message)
-            os.system("docker tag %s %s/%s" % (image_name, current_app.config['DOCKER_REGISTRY'], image_name))
-            c.images.push("%s/%s" % (current_app.config['DOCKER_REGISTRY'], image_name), insecure_registry=True)
+            container.commit(image_name,tag = tag,author = session.get('username'),message = message)
+            os.system("docker tag %s:%s %s/%s:%s" % (image_name,tag,current_app.config['DOCKER_REGISTRY'], image_name,tag))
+            c.images.push("%s/%s:%s" % (current_app.config['DOCKER_REGISTRY'], image_name,tag), insecure_registry=True)
         except Exception,e:
             return jsonify({
                 'result':-1,
                 'errMsg':str(e)
             })
         else:
+            image = DockerImage()
+            image.image_name = image_name
+            image.tag_name = tag
+            res = c.images.get("%s:%s" % (image_name, tag))
+            image.image_id = res.id.split(':')[1]
+            image.creater = session.get('username')
+            dc = DockerContainer.query.filter_by(container_id=container_id).first()
+            di = DockerImage.query.get(dc.image_id)
+            image.dockerfile_id = di.dockerfile_id
+            db.session.add(image)
             return jsonify({
                 'result':1
             })
@@ -279,18 +292,23 @@ def dockercontainer_list():
         container_dir = json_data.get('container_dir','')
         model = json_data.get('model','')
         container_name2 = json_data.get('container_name2','')
+        command = json_data.get('command','')
+        status = json_data.get('status','')
+        image = DockerImage.query.get(image_name)
         try:
             c = DockerClient.client()
             if dst_port:
                 if not src_port:
-                    port_dict = {'%s/tcp' % dst_port: None}
+                    port_dict = {'%s/tcp' % int(dst_port): None}
                 elif src_port.find(',')>=0:
                     src_port_list = src_port.split(',')
                     new_src_port_list = []
                     for p in src_port_list:
                         if p != '':
                             new_src_port_list.append(int(p))
-                    port_dict = {'%s/tcp' % dst_port: new_src_port_list}
+                    port_dict = {'%s/tcp' % int(dst_port): new_src_port_list}
+                else:
+                    port_dict = {'%s/tcp' % int(dst_port): int(src_port)}
             else:
                 port_dict = {}
             if host_dir and container_dir:
@@ -304,13 +322,28 @@ def dockercontainer_list():
                 volumes_from = [container_name2]
             else:
                 volumes_from = []
-            c.containers.run(image = image_name,name = container_name,ports = port_dict,volumes = volume_dict,volumes_from = volumes_from,detach=True)
+            if status:
+                if status == '0':
+                    detach = False
+                else:
+                    detach = True
+            c.containers.run(image = image.image_name,name = container_name,ports = port_dict,volumes = volume_dict,volumes_from = volumes_from,command = command,detach = detach,tty = True)
         except Exception,e:
             return jsonify({
                 'result':-1,
                 'errMsg':str(e),
             })
         else:
+            dc = DockerContainer()
+            dc.container_name = container_name
+            container = c.containers.get(container_name)
+            dc.container_id = container.short_id
+            dc.status = detach
+            dc.src_port = src_port
+            dc.dst_port = dst_port
+            dc.image_id = image_name
+            dc.creater = session.get('username')
+            db.session.add(dc)
             return jsonify({'result':1})
     if type == 'load_container_list':
         container_list = []
@@ -321,6 +354,21 @@ def dockercontainer_list():
                 'container_name': container.container_name,
             })
         return jsonify(container_list)
+    if type == 'start_container':
+        c = DockerClient.client()
+        container = c.containers.get(container_id)
+        try:
+            container.start()
+        except Exception,e:
+            return jsonify({
+                'result': -1,
+                'errMsg': str(e),
+            })
+        else:
+            dc = DockerContainer.query.filter_by(container_id = container_id).first()
+            dc.status = 1
+            db.session.merge(dc)
+            return jsonify({'result': 1})
     if type == 'restart_container':
         c = DockerClient.client()
         container = c.containers.get(container_id)
@@ -333,6 +381,7 @@ def dockercontainer_list():
             })
         else:
             return jsonify({'result': 1})
+
     if container_id and is_delete_volume and is_delete_link:
         c = DockerClient.client()
         container = c.containers.get(container_id)
@@ -345,7 +394,6 @@ def dockercontainer_list():
         else:
             link = True
         try:
-            print volume,link
             container.remove(v = volume,link = link,force = True)
         except Exception,e:
             return jsonify({
