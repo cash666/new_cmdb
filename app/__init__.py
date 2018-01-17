@@ -35,3 +35,6 @@ app.register_blueprint(asset_blueprint)
 
 from .docker import docker as docker_blueprint
 app.register_blueprint(docker_blueprint)
+
+from .api import api as api_blueprint
+app.register_blueprint(api_blueprint)

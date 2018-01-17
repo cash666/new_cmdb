@@ -6,8 +6,10 @@
 
 from app import db,login_manager
 from datetime import datetime
-from flask_login import UserMixin
+from flask_login import UserMixin,AnonymousUserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask import current_app
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -45,6 +47,19 @@ class User(UserMixin, db.Model):
         else:
             return Task.query.filter(Task.publisher == self.name, Task.check_status == u'通过').count()
 
+    def generate_auth_token(self,expiration):
+        s = Serializer(current_app.config['SECRET_KEY'],expires_in = expiration)
+        return s.dumps({'id':self.id})
+
+    @staticmethod
+    def verify_auth_token(token):
+        s = Serializer(current_app.config['SECRET_KEY'])
+        try:
+            data = s.loads(token)
+        except:
+            return None
+        return User.query.get(data['id'])
+
 role_permission = db.Table('role_permission',
     db.Column('role_id', db.Integer, db.ForeignKey('roles.id'), primary_key = True),
     db.Column('permission_id', db.Integer, db.ForeignKey('permissions.id'), primary_key = True),
@@ -66,6 +81,11 @@ class Permission(db.Model):
     name = db.Column(db.String(32), unique = True)
     alias_name = db.Column(db.String(32), unique = True)
     create_time = db.Column(db.DateTime, default = datetime.utcnow)
+
+class AnonymousUser(AnonymousUserMixin):
+    pass
+
+login_manager.anonymous_user = AnonymousUser
 
 @login_manager.user_loader
 def load_user(user_id):
