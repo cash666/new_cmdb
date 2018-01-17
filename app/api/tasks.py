@@ -139,10 +139,12 @@ def delete_task(task_id):
     return jsonify({'result': True})
 
 @api.route('/api/tasks',methods = ['POST'])
+@auth.login_required
 def create_task():
     pass
 
 @api.route('/tasks/<int:task_id>',methods = ['PUT'])
+@auth.login_required
 def update_task(task_id):
     pass
 

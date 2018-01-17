@@ -12,9 +12,9 @@ from .errors import unauthorized, forbidden
 
 auth = HTTPBasicAuth()
 
-
 @auth.verify_password
 def verify_password(token_or_username, password):
+    print token_or_username,password
     if not token_or_username:
         g.current_user = AnonymousUser()
         return True
