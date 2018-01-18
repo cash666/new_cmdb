@@ -103,13 +103,7 @@ def delete_asset(asset_id):
     db.session.delete(asset)
     return jsonify({'result': True})
 
-@api.route('/api/assets',methods = ['POST'])
-def create_asset():
-    pass
 
-@api.route('/assets/<int:asset_id>',methods = ['PUT'])
-def update_asset(asset_id):
-    pass
 
 
 
