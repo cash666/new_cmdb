@@ -1,0 +1,21 @@
+{
+  "name": "new_cmdb",
+  "version": "1.0.0",
+  "description": "本系统前端采用bootstrap+jquery+vue.js，后端采用python+flask实现的资产管理,工单提交和Docker管理等功能的CMDB系统，新的功能后续还会再添加，欢迎star。",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cash666/new_cmdb.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cash666/new_cmdb/issues"
+  },
+  "homepage": "https://github.com/cash666/new_cmdb#readme"
+}
